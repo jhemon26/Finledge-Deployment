@@ -1058,14 +1058,6 @@
     const n = people.length;
     const paused = people.filter((m) => m.statusNow !== 'in').length;
 
-    // A grid that fits the tile's height: 2 across up to four people, then 3,
-    // then 4, with the face size worked out from how many rows that makes.
-    const cols = n <= 2 ? Math.max(n, 1) : n <= 4 ? 2 : n <= 9 ? 3 : 4;
-    const rows = Math.max(1, Math.ceil(n / cols));
-    const size = Math.max(10, Math.min(28, Math.floor((50 - (rows - 1) * 4) / rows)));
-    facesEl.style.setProperty('--cols', cols);
-    facesEl.style.setProperty('--face', `${size}px`);
-
     // Sharing first, paused last and dimmed.
     const ordered = [...people].sort((x, y) => (x.statusNow === y.statusNow ? 0 : x.statusNow === 'in' ? -1 : 1));
     facesEl.innerHTML = ordered
