@@ -367,12 +367,10 @@
                transaction count, which was already printed under the list
                below; the number of people sharing is the one that moves the
                daily average and everybody's balance. -->
-          <div class="hero-stat">
-            <div class="hero-stat-label">Sharing</div>
-            <!-- Just the faces. They share the tile's width, so a small room
-                 shows them large and a big room shrinks them to fit. -->
-            <div class="hero-stat-value hero-faces" id="home-sharing-faces" role="img"></div>
-            <div class="hero-stat-sub" id="home-sharing-sub"></div>
+          <div class="hero-stat hero-stat-faces">
+            <!-- Just the faces, in a small grid sized to the tile: two side by
+                 side, four as 2 x 2, more in tighter rows. Paused are dimmed. -->
+            <div class="hero-faces" id="home-sharing-faces" role="img"></div>
           </div>
           <div class="hero-stat">
             <div class="hero-stat-label">Daily average</div>

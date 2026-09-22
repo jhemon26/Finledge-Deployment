@@ -1050,23 +1050,28 @@
   // explaining something that has not happened.
   function renderHomeSharing(a) {
     const facesEl = $('#home-sharing-faces');
-    const subEl = $('#home-sharing-sub');
     if (!facesEl) return;
     const part = a.participation;
     const people = part
       ? part.members
       : state.members.map((m) => ({ memberId: m.id, name: m.name, avatar: m.avatar, statusNow: 'in' }));
-    const total = people.length;
+    const n = people.length;
     const paused = people.filter((m) => m.statusNow !== 'in').length;
 
-    // Sharing first, paused last and dimmed. Every face gets an equal slice of
-    // the tile (see .hero-faces), so nothing ever overlaps.
+    // A grid that fits the tile's height: 2 across up to four people, then 3,
+    // then 4, with the face size worked out from how many rows that makes.
+    const cols = n <= 2 ? Math.max(n, 1) : n <= 4 ? 2 : n <= 9 ? 3 : 4;
+    const rows = Math.max(1, Math.ceil(n / cols));
+    const size = Math.max(10, Math.min(28, Math.floor((50 - (rows - 1) * 4) / rows)));
+    facesEl.style.setProperty('--cols', cols);
+    facesEl.style.setProperty('--face', `${size}px`);
+
+    // Sharing first, paused last and dimmed.
     const ordered = [...people].sort((x, y) => (x.statusNow === y.statusNow ? 0 : x.statusNow === 'in' ? -1 : 1));
     facesEl.innerHTML = ordered
       .map((m) => `<span class="hero-face${m.statusNow !== 'in' ? ' is-paused' : ''}" title="${escapeHtml(m.name)}${m.statusNow !== 'in' ? ' — paused' : ''}">${avatarHtml(m.avatar, 'avatar-xs')}</span>`)
       .join('');
-    facesEl.setAttribute('aria-label', paused ? `${total - paused} of ${total} sharing` : `${total} sharing`);
-    if (subEl) subEl.textContent = !total ? '' : paused > 0 ? `${paused} paused` : total === 1 ? 'just you' : 'all sharing';
+    facesEl.setAttribute('aria-label', paused ? `${n - paused} of ${n} sharing, ${paused} paused` : `${n} sharing`);
   }
 
   // Direction is carried by an arrow glyph and the sign as well as the
