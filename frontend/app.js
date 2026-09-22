@@ -715,29 +715,28 @@
     renderProfile();
   }
 
-  // Home's query. The month is pinned to the live one and is not negotiable —
-  // the search and filter controls narrow *this month*, nothing else.
-  function buildQuery() {
-    const p = new URLSearchParams();
-    p.set('month', currentMonthKey());
-    if (state.filters.member) p.set('memberId', state.filters.member);
-    if (state.filters.category) p.set('category', state.filters.category);
-    if (state.filters.q) p.set('q', state.filters.q);
-    const s = p.toString();
-    return s ? `?${s}` : '';
-  }
-
+  // Home's query: the live month, unfiltered. Search and filters moved to
+  // History, which is where you go looking for something.
   async function refreshExpenses() {
-    state.expenses = await api('/api/expenses' + buildQuery());
+    state.expenses = await api(`/api/expenses?month=${encodeURIComponent(currentMonthKey())}`);
     renderTransactions();
   }
 
-  // Activity's list. Unfiltered on purpose: it is the record of a month, not a
-  // search over it. When the month bar is on the live month this is the same
-  // rows Home shows, which is exactly what you would expect it to be.
+  function isFiltered() {
+    const f = state.filters;
+    return !!(f.member || f.category || f.q);
+  }
+
+  // History's list: whichever month the bar is on, narrowed by the search box
+  // and filters above it.
   async function refreshHistoryExpenses() {
     const month = state.activeMonth || currentMonthKey();
-    state.historyExpenses = await api(`/api/expenses?month=${encodeURIComponent(month)}`);
+    const p = new URLSearchParams();
+    p.set('month', month);
+    if (state.filters.member) p.set('memberId', state.filters.member);
+    if (state.filters.category) p.set('category', state.filters.category);
+    if (state.filters.q) p.set('q', state.filters.q);
+    state.historyExpenses = await api(`/api/expenses?${p.toString()}`);
     // Remember which month these rows are, so the summary above them can name
     // it without waiting on the analytics call to land — the two are fetched
     // in parallel and either can win.
@@ -1060,7 +1059,9 @@
     const sharing = part ? people.filter((m) => m.statusAtMonthEnd === 'in') : state.members;
     const paused = total - sharing.length;
 
-    valueEl.textContent = paused > 0 ? `${sharing.length} of ${total}` : String(total);
+    valueEl.textContent = paused > 0 ? `${sharing.length}/${total}` : String(total);
+    const subEl = $('#home-sharing-sub');
+    if (subEl) subEl.textContent = !total ? '' : paused > 0 ? `${paused} paused` : total === 1 ? 'just you' : 'all in';
 
     // Faces, sharing first, with the paused ones dimmed rather than removed —
     // "Dan is paused" is the thing worth seeing, and dropping him hides it.
@@ -1069,12 +1070,12 @@
       : state.members.map((m) => ({ memberId: m.id, name: m.name, avatar: m.avatar, statusAtMonthEnd: 'in' }));
 
     facesEl.innerHTML = ordered
-      .slice(0, 6)
+      .slice(0, 4)
       .map((m) => {
         const out = m.statusAtMonthEnd !== 'in';
         return `<span class="sharing-face${out ? ' is-paused' : ''}" title="${escapeHtml(m.name)}${out ? ' — paused' : ''}">${avatarHtml(m.avatar, 'avatar-xs')}</span>`;
       })
-      .join('') + (ordered.length > 6 ? `<span class="sharing-more">+${ordered.length - 6}</span>` : '');
+      .join('') + (ordered.length > 4 ? `<span class="sharing-more">+${ordered.length - 4}</span>` : '');
   }
 
   // Direction is carried by an arrow glyph and the sign as well as the
@@ -1181,7 +1182,7 @@
   //
   // Pointer Events rather than touch events: the same code then covers a mouse
   // drag on desktop, where there is no touch to swipe with.
-  const SWIPE_REVEAL = 132;   // px — the width of the two buttons behind the card
+  const SWIPE_REVEAL = 152;   // px — the two buttons plus their gaps (.tx-swipe-actions)
   const SWIPE_SLOP = 8;       // px of travel before we decide this is a swipe
   let openSwipeRow = null;
 
@@ -1265,6 +1266,7 @@
         axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
         if (axis === 'y') { card.classList.remove('is-dragging'); return; }
         card.setPointerCapture(ev.pointerId);
+        row.classList.add('is-swiping');
       }
 
       dragged = true;
@@ -1275,6 +1277,7 @@
     const finish = (ev) => {
       if (!card.classList.contains('is-dragging')) return;
       card.classList.remove('is-dragging');
+      row.classList.remove('is-swiping');
       if (card.hasPointerCapture && card.hasPointerCapture(ev.pointerId)) card.releasePointerCapture(ev.pointerId);
       if (axis !== 'x') return;
       const dx = ev.clientX - startX;
@@ -1408,10 +1411,7 @@
     const all = state.expenses;
     fillTxList($('#tx-list'), all.slice(0, RECENT_LIMIT));
     $('#tx-empty').classList.toggle('hidden', all.length > 0);
-    const filtered = !!(state.filters.member || state.filters.category || state.filters.q);
-    $('#tx-empty-text').textContent = filtered
-      ? 'Nothing this month matches those filters.'
-      : 'No transactions yet. Tap + to add one.';
+    $('#tx-empty-text').textContent = 'No transactions yet. Tap + to add one.';
     // Only worth saying when something is actually being held back.
     state.txTotalCount = all.length > RECENT_LIMIT ? all.length : 0;
     renderTxSectionNote();
@@ -1437,11 +1437,15 @@
     const countEl = $('#month-summary-count');
     if (label) label.textContent = isLive ? 'This month' : monthLabelLong(month);
     if (totalEl) totalEl.textContent = money(total);
-    if (countEl) countEl.textContent = rows.length === 1 ? '1 transaction' : `${rows.length} transactions`;
+    const filtered = isFiltered();
+    if (label && filtered) label.textContent = `${isLive ? 'This month' : monthLabelLong(month)} · matching`;
+    if (countEl) countEl.textContent = rows.length === 1 ? `1 ${filtered ? 'match' : 'transaction'}` : `${rows.length} ${filtered ? 'matches' : 'transactions'}`;
     $('#history-tx-empty').classList.toggle('hidden', rows.length > 0);
-    $('#history-tx-empty-text').textContent = isLive
-      ? 'Nothing recorded this month yet.'
-      : `Nothing was recorded in ${monthLabelLong(month)}.`;
+    $('#history-tx-empty-text').textContent = filtered
+      ? `Nothing in ${isLive ? 'this month' : monthLabelLong(month)} matches your search.`
+      : isLive
+        ? 'Nothing recorded this month yet.'
+        : `Nothing was recorded in ${monthLabelLong(month)}.`;
   }
 
   function populateFilterOptions() {
@@ -1472,18 +1476,18 @@
       clearTimeout(searchDebounce);
       searchDebounce = setTimeout(() => {
         state.filters.q = e.target.value.trim();
-        refreshExpenses();
+        refreshHistoryExpenses();
       }, 300);
     });
 
-    $('#filter-member').addEventListener('change', (e) => { state.filters.member = e.target.value; updateFilterIndicator(); refreshExpenses(); });
-    $('#filter-category').addEventListener('change', (e) => { state.filters.category = e.target.value; updateFilterIndicator(); refreshExpenses(); });
+    $('#filter-member').addEventListener('change', (e) => { state.filters.member = e.target.value; updateFilterIndicator(); refreshHistoryExpenses(); });
+    $('#filter-category').addEventListener('change', (e) => { state.filters.category = e.target.value; updateFilterIndicator(); refreshHistoryExpenses(); });
     $('#filter-clear-btn').addEventListener('click', () => {
       state.filters = { member: '', category: '', q: '' };
       $('#search-input').value = '';
       populateFilterOptions();
       updateFilterIndicator();
-      refreshExpenses();
+      refreshHistoryExpenses();
     });
   }
 
@@ -1901,7 +1905,7 @@
     if (!e) return;
     openConfirm({
       title: 'Delete this expense?',
-      body: `"${e.description}" (${money(e.amount)}) will be permanently removed.`,
+      body: `"${e.description}" (${money(e.amount)}) will be permanently removed from everyone's history and from this month's split. This can't be undone.`,
       confirmLabel: 'Delete',
       danger: true,
       onConfirm: async () => {
@@ -2230,6 +2234,7 @@
     }
 
     renderSettleUp(a.settleUp);
+    renderAnalyticsSharing(a);
   }
 
   // When somebody paused or resumed mid-month the month is not one split but
@@ -2239,6 +2244,57 @@
   //
   // Nothing renders at all in the ordinary case — one segment means nobody
   // paused, and there is nothing to explain.
+  // Who is sharing the month being viewed: every face, in or paused, and what
+  // each paid against their share. Always drawn — it is the one place the
+  // split is explained member by member, whether or not anyone paused.
+  function renderAnalyticsSharing(a) {
+    const list = $('#an-sharing-list');
+    if (!list) return;
+    const settle = a.settleUp;
+    const part = a.participation;
+    const balances = (settle && settle.balances) || [];
+    const people = part ? part.members : [];
+    const byId = new Map(people.map((m) => [m.memberId, m]));
+    const statusOf = (id) => {
+      const m = byId.get(id);
+      if (!m) return 'in';
+      return state.isCurrentMonth ? m.statusNow : m.statusAtMonthEnd;
+    };
+
+    const inCount = balances.filter((b) => statusOf(b.memberId) === 'in').length;
+    $('#an-sharing-note').textContent = balances.length
+      ? (inCount === balances.length ? `All ${balances.length} in` : `${inCount} of ${balances.length} in`)
+      : '';
+
+    if (!balances.length) {
+      list.innerHTML = `<p class="chart-empty">Nobody was in the room in ${escapeHtml(monthLabelLong(a.month))}.</p>`;
+      return;
+    }
+
+    list.innerHTML = balances
+      .map((b) => {
+        const m = byId.get(b.memberId);
+        const out = statusOf(b.memberId) !== 'in';
+        const next = state.isCurrentMonth && m && m.scheduled && m.scheduled.length ? m.scheduled[0] : null;
+        const sub = next
+          ? `${next.status === 'out' ? 'Pausing' : 'Resuming'} ${shortDay(next.effectiveFrom)}`
+          : out ? 'Paused' : 'Sharing';
+        return `
+        <div class="an-share-row${out ? ' is-paused' : ''}">
+          ${avatarHtml(b.avatar, 'avatar-md')}
+          <div class="an-share-info">
+            <div class="an-share-name">${escapeHtml(b.name)}${b.memberId === state.member.id ? ' (You)' : ''}</div>
+            <div class="an-share-sub">${escapeHtml(sub)}</div>
+          </div>
+          <div class="an-share-figs">
+            <span class="an-share-paid">${money(b.paid)}</span>
+            <span class="an-share-of">share ${money(b.fairShare)}</span>
+          </div>
+        </div>`;
+      })
+      .join('');
+  }
+
   function renderSegmentNotice(settle) {
     const btn = $('#seg-notice');
     const body = $('#seg-breakdown');
@@ -2851,19 +2907,9 @@
       body: 'Home is always the current month: what the room has spent, how it compares to last month, and whether you are owed money or owe it.',
     },
     {
-      target: ['.search-box'],
-      title: 'Search',
-      body: 'Find a transaction by description.',
-    },
-    {
-      target: ['#filter-toggle-btn'],
-      title: 'Filter',
-      body: 'Narrow this month by member or category.',
-    },
-    {
       target: ['#tx-list .tx-card', '#tx-empty', '#tx-list'],
       title: 'Recent transactions',
-      body: "This month's spending, newest first. Edit with the pencil, remove with the bin.",
+      body: "This month's spending, newest first. Tap one to see its details.",
     },
     {
       target: ['#fab-add'],
@@ -2878,7 +2924,7 @@
     {
       target: ['.nav-btn[data-view="history"]'],
       title: 'Past months',
-      body: 'History is where closed months live. Pick a month at the top — the last two are one tap, "Previous" opens the full 18 months — and you get that month\u2019s total and every transaction in it. Closed months are read-only.',
+      body: 'History is where closed months live. Pick a month at the top — the last two are one tap, "Previous" opens the full 18 months — and you get that month\u2019s total and every transaction in it. Search and filter live here too. Swipe a transaction left to edit or delete it; closed months are read-only.',
     },
     {
       target: ['.nav-btn[data-view="activity"]'],

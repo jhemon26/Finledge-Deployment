@@ -369,8 +369,11 @@
                daily average and everybody's balance. -->
           <div class="hero-stat">
             <div class="hero-stat-label">Sharing</div>
-            <div class="hero-stat-value" id="home-sharing">—</div>
-            <div class="hero-stat-sub hero-sharing-faces" id="home-sharing-faces"></div>
+            <div class="hero-stat-value hero-sharing-row">
+              <span class="hero-sharing-faces" id="home-sharing-faces"></span>
+              <span class="hero-sharing-count" id="home-sharing">—</span>
+            </div>
+            <div class="hero-stat-sub" id="home-sharing-sub"></div>
           </div>
           <div class="hero-stat">
             <div class="hero-stat-label">Daily average</div>
@@ -378,24 +381,6 @@
             <div class="hero-stat-sub" id="home-avgday-sub">so far</div>
           </div>
         </div>
-      </div>
-
-      <div class="filter-bar">
-        <div class="search-box">
-          <svg class="icon-sm"><use href="#icon-search"/></svg>
-          <input type="text" id="search-input" placeholder="Search transactions" />
-        </div>
-        <button class="icon-btn" id="filter-toggle-btn" aria-label="Filter"><svg class="icon-sm"><use href="#icon-sliders"/></svg></button>
-      </div>
-
-      <div class="filter-panel panel hidden" id="filter-panel">
-        <label>Who spent
-          <select id="filter-member"><option value="">Everyone</option></select>
-        </label>
-        <label>Category
-          <select id="filter-category"><option value="">All categories</option></select>
-        </label>
-        <button class="btn-ghost" id="filter-clear-btn">Clear filters</button>
       </div>
 
       <!-- Home is the live month and only the live month. Anything older is
@@ -413,6 +398,24 @@
 
     <!-- ANALYTICS -->
     <section id="view-analytics" class="view">
+      <!-- Who is sharing the bill in the month being viewed: everyone's face,
+           whether they are in or paused, and what they paid against their
+           share. When somebody paused or resumed mid-month, the notice says
+           so; tap it to see each stretch of the month on its own. -->
+      <div class="panel" id="an-sharing-panel">
+        <div class="panel-head">
+          <h3 class="panel-title">Who's sharing</h3>
+          <span class="panel-note" id="an-sharing-note"></span>
+        </div>
+        <button type="button" class="seg-notice hidden" id="seg-notice" aria-expanded="false">
+          <svg class="icon-sm"><use href="#icon-users"/></svg>
+          <span class="seg-notice-text" id="seg-notice-text"></span>
+          <svg class="icon-sm seg-notice-chevron"><use href="#icon-chevron"/></svg>
+        </button>
+        <div class="seg-breakdown hidden" id="seg-breakdown"></div>
+        <div class="an-sharing-list" id="an-sharing-list"></div>
+      </div>
+
       <div class="stat-strip">
         <div class="stat-tile panel">
           <div class="stat-label" id="an-total-label">This month</div>
@@ -482,14 +485,6 @@
           <span class="panel-note" id="settle-month-note"></span>
         </div>
         <p class="panel-hint" id="settle-hint">Splits the month's spending evenly and works out who owes who.</p>
-        <!-- Shown only when somebody paused or resumed mid-month, so the split
-             is not one even division. Tap it to see each stretch on its own. -->
-        <button type="button" class="seg-notice hidden" id="seg-notice" aria-expanded="false">
-          <svg class="icon-sm"><use href="#icon-users"/></svg>
-          <span class="seg-notice-text" id="seg-notice-text"></span>
-          <svg class="icon-sm seg-notice-chevron"><use href="#icon-chevron"/></svg>
-        </button>
-        <div class="seg-breakdown hidden" id="seg-breakdown"></div>
         <div id="settle-balances" class="settle-balances"></div>
         <div id="settle-list" class="settle-list"></div>
         <!-- Whether the room has agreed these payments were actually made.
@@ -517,6 +512,24 @@
           <span class="month-summary-total" id="month-summary-total">£0.00</span>
         </div>
         <span class="month-summary-count" id="month-summary-count"></span>
+      </div>
+
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg class="icon-sm"><use href="#icon-search"/></svg>
+          <input type="text" id="search-input" placeholder="Search this month" />
+        </div>
+        <button class="icon-btn" id="filter-toggle-btn" aria-label="Filter"><svg class="icon-sm"><use href="#icon-sliders"/></svg></button>
+      </div>
+
+      <div class="filter-panel panel hidden" id="filter-panel">
+        <label>Who spent
+          <select id="filter-member"><option value="">Everyone</option></select>
+        </label>
+        <label>Category
+          <select id="filter-category"><option value="">All categories</option></select>
+        </label>
+        <button class="btn-ghost" id="filter-clear-btn">Clear filters</button>
       </div>
 
       <div class="section-head">
@@ -610,8 +623,10 @@
       <div class="panel hidden" id="host-tools-card">
         <h3 class="panel-title">Host tools</h3>
         <p class="panel-hint">Customize the categories everyone in this room can pick from.</p>
-        <button class="btn-secondary" id="manage-categories-btn"><svg class="icon-sm"><use href="#icon-tag"/></svg> Manage categories</button>
-        <button class="btn-secondary" id="handover-host-btn"><svg class="icon-sm"><use href="#icon-switch"/></svg> Hand over host</button>
+        <div class="btn-stack">
+          <button class="btn-secondary" id="manage-categories-btn"><svg class="icon-sm"><use href="#icon-tag"/></svg> Manage categories</button>
+          <button class="btn-secondary" id="handover-host-btn"><svg class="icon-sm"><use href="#icon-switch"/></svg> Hand over host</button>
+        </div>
       </div>
 
       <div class="profile-actions">
@@ -714,8 +729,8 @@
       </label>
       <label class="field">What
         <select id="sharing-what">
-          <option value="out">Pause — stop sharing the bill</option>
-          <option value="in">Resume — start sharing again</option>
+          <option value="out">Pause sharing</option>
+          <option value="in">Resume sharing</option>
         </select>
       </label>
       <label class="field">Starting from

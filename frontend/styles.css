@@ -275,11 +275,12 @@ h1, h2, h3 { line-height: 1.3; }
 
 .auth-form { display: flex; flex-direction: column; gap: 15px; }
 .auth-form label, #expense-form label, .filter-panel label, #category-edit-form label,
-#name-form label {
+#name-form label, #sharing-form label {
   font-size: 11.5px; font-weight: 500; color: var(--dim); display: flex; flex-direction: column; gap: 7px;
   text-transform: uppercase; letter-spacing: .07em;
 }
-.auth-form input, #expense-form input, #category-edit-form input, #name-form input {
+.auth-form input, #expense-form input, #category-edit-form input, #name-form input,
+#sharing-form input, #sharing-form select {
   border: 1px solid var(--rule); border-radius: var(--r-sm); padding: 12px 13px;
   font-size: 15px; background: rgba(255,255,255,.045); color: var(--ink);
   text-transform: none; letter-spacing: 0; line-height: 1.5;
@@ -288,7 +289,7 @@ h1, h2, h3 { line-height: 1.3; }
 .auth-form input::placeholder, #expense-form input::placeholder,
 #category-edit-form input::placeholder, #name-form input::placeholder { color: rgba(246,246,250,.34); }
 .auth-form input:focus, #expense-form input:focus, #category-edit-form input:focus,
-#name-form input:focus {
+#name-form input:focus, #sharing-form input:focus, #sharing-form select:focus {
   outline: none; border-color: rgba(194,214,232,.34); background: rgba(255,255,255,.07);
 }
 .checkbox-row {
@@ -627,25 +628,36 @@ h1, h2, h3 { line-height: 1.3; }
    reads as lag. */
 .tx-row > .tx-card.is-dragging { transition: none; }
 
+/* The buttons only exist once you swipe. The card is translucent glass, so a
+   button sitting under a resting card would show straight through it — which
+   is what made them look like they were overlapping every row. */
+.tx-row > .tx-card { background: linear-gradient(var(--panel), var(--panel)), var(--bg); }
+.tx-row > .tx-card:hover { background: linear-gradient(rgba(255,255,255,.085), rgba(255,255,255,.085)), var(--bg); }
 .tx-swipe-actions {
   position: absolute; top: 0; right: 0; bottom: 0;
-  display: flex; align-items: stretch;
-  width: 132px;
+  display: flex; align-items: stretch; gap: 8px;
+  width: 152px; padding: 4px 0 4px 8px; box-sizing: border-box;
+  opacity: 0; visibility: hidden;
+  transition: opacity .16s ease, visibility 0s linear .16s;
 }
+.tx-row.is-open .tx-swipe-actions, .tx-row.is-swiping .tx-swipe-actions {
+  opacity: 1; visibility: visible; transition: opacity .16s ease, visibility 0s;
+}
+/* Filled and rounded: gold for edit, red for delete — the two must never be
+   mistaken for each other under a thumb. */
 .tx-swipe-btn {
   flex: 1; min-width: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-  font: inherit; font-size: 11px; font-weight: 600; letter-spacing: .02em;
-  border: 1px solid var(--rule); border-left: none;
-  background: var(--panel); color: var(--soft);
+  font: inherit; font-size: 11.5px; font-weight: 700; letter-spacing: .02em;
+  border: none; border-radius: var(--r);
   cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: filter .14s ease, transform .14s ease;
 }
-.tx-swipe-btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; }
-.tx-swipe-btn:active { background: rgba(255,255,255,.07); }
-.tx-swipe-btn:focus-visible { outline: 2px solid var(--acc); outline-offset: -3px; }
-/* Delete is the destructive one and says so in ink, not in a fill — a solid
-   red block behind every row would shout the moment anyone scrolled. */
-.tx-swipe-del { color: var(--warm); border-radius: 0 var(--r) var(--r) 0; }
+.tx-swipe-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+.tx-swipe-btn:active { filter: brightness(.88); transform: scale(.96); }
+.tx-swipe-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tx-swipe-edit { background: #e2b54a; color: #2a1f05; }
+.tx-swipe-del  { background: #e0514b; color: #fff; }
 
 /* A quiet heading for a list that is not in a panel. */
 .section-head {
@@ -828,12 +840,25 @@ h1, h2, h3 { line-height: 1.3; }
 /* Who is sharing the bill, in the hero tile that used to hold the transaction
    count. The faces sit in the sub-line's slot, so the tile is exactly as tall
    as the two beside it. */
-.hero-sharing-faces { display: flex; align-items: center; gap: 2px; }
+.hero-sharing-row { display: flex; align-items: center; gap: 7px; overflow: visible; }
+.hero-sharing-faces { display: inline-flex; align-items: center; flex-shrink: 0; }
+/* Faces stack like a group photo: each one tucks under the last, ringed in
+   the hero's own ground so the overlap reads as depth, not as a clash. */
+.hero-sharing-faces .sharing-face { display: inline-flex; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg2); }
+.hero-sharing-faces .sharing-face + .sharing-face { margin-left: -7px; }
+.hero-sharing-faces .avatar-xs { width: 24px; height: 24px; }
+.hero-sharing-faces .avatar-xs svg { width: 14px; height: 14px; }
+.hero-sharing-count { flex-shrink: 0; }
 .sharing-face { display: inline-flex; }
 /* A paused member is dimmed, never dropped — that they are paused is the
    thing worth seeing, and removing them hides it. */
-.sharing-face.is-paused { opacity: .3; }
-.sharing-more { font-size: 10.5px; color: var(--dim); margin-left: 3px; }
+.sharing-face.is-paused { opacity: .35; }
+.sharing-more { font-size: 11px; color: var(--dim); margin-left: 5px; }
+
+/* Stacked panel buttons need air between them — two full-width buttons
+   touching read as one broken control. */
+.btn-stack { display: flex; flex-direction: column; gap: 10px; }
+#sharing-change-btn { margin-top: 12px; width: 100%; }
 
 .sharing-requests:not(:empty) { margin-bottom: 4px; }
 .sharing-req {
@@ -862,6 +887,24 @@ h1, h2, h3 { line-height: 1.3; }
   color: var(--acc2); background: rgba(159,199,178,.09); border: 1px solid rgba(159,199,178,.26);
 }
 .sharing-pill.is-paused { color: var(--warm); background: rgba(217,184,162,.09); border-color: rgba(217,184,162,.26); }
+
+/* ---- Analytics: who's sharing -------------------------------------- */
+.an-sharing-list { display: flex; flex-direction: column; }
+.an-share-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 0; border-bottom: 1px solid var(--rule);
+}
+.an-share-row:last-child { border-bottom: none; padding-bottom: 0; }
+.an-share-row:first-child { padding-top: 0; }
+.an-share-row.is-paused > .avatar-md { opacity: .4; }
+.an-share-info { flex: 1; min-width: 0; }
+.an-share-name { font-size: 14px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.an-share-row.is-paused .an-share-name { color: var(--soft); }
+.an-share-sub { font-size: 11.5px; color: var(--acc2); margin-top: 2px; }
+.an-share-row.is-paused .an-share-sub { color: var(--warm); }
+.an-share-figs { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+.an-share-paid { font-size: 13.5px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.an-share-of { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
 
 /* ---- the mid-month split notice -------------------------------------- */
 /* Only drawn when the month really was cut — see renderSegmentNotice. */
@@ -989,7 +1032,23 @@ h1, h2, h3 { line-height: 1.3; }
 .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
 .modal-header h2 { font-size: 17px; font-weight: 600; margin: 0; }
 
-#expense-form, #category-edit-form, #name-form { display: flex; flex-direction: column; gap: 16px; }
+#expense-form, #category-edit-form, #name-form, #sharing-form { display: flex; flex-direction: column; gap: 16px; }
+/* Native selects and date inputs ignore half the box rules unless told to
+   drop their platform chrome; without this the sharing sheet rendered as
+   bright system widgets on the dark sheet. */
+#sharing-form select, #sharing-form input[type="date"] {
+  -webkit-appearance: none; appearance: none; width: 100%; box-sizing: border-box;
+  min-height: 48px; color-scheme: dark;
+}
+#sharing-form select {
+  padding-right: 38px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23d6d9e4' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+#sharing-form option { background: var(--bg2); color: var(--ink); }
+#sharing-form input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+#sharing-form input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.85); cursor: pointer; }
+#sharing-form .field-hint { margin: -6px 0 0; }
 .label-optional { text-transform: none; letter-spacing: 0; color: var(--faint); }
 
 .category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
