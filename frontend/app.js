@@ -1050,32 +1050,15 @@
   // explaining something that has not happened.
   function renderHomeSharing(a) {
     const valueEl = $('#home-sharing');
-    const facesEl = $('#home-sharing-faces');
-    if (!valueEl || !facesEl) return;
-
-    const part = a.participation;
-    const people = part ? part.members : [];
-    const total = people.length || state.members.length;
-    const sharing = part ? people.filter((m) => m.statusAtMonthEnd === 'in') : state.members;
-    const paused = total - sharing.length;
-
-    valueEl.textContent = paused > 0 ? `${sharing.length}/${total}` : String(total);
     const subEl = $('#home-sharing-sub');
-    if (subEl) subEl.textContent = !total ? '' : paused > 0 ? `${paused} paused` : total === 1 ? 'just you' : 'all in';
-
-    // Faces, sharing first, with the paused ones dimmed rather than removed —
-    // "Dan is paused" is the thing worth seeing, and dropping him hides it.
-    const ordered = part
-      ? [...people].sort((x, y) => (x.statusAtMonthEnd === y.statusAtMonthEnd ? 0 : x.statusAtMonthEnd === 'in' ? -1 : 1))
-      : state.members.map((m) => ({ memberId: m.id, name: m.name, avatar: m.avatar, statusAtMonthEnd: 'in' }));
-
-    facesEl.innerHTML = ordered
-      .slice(0, 4)
-      .map((m) => {
-        const out = m.statusAtMonthEnd !== 'in';
-        return `<span class="sharing-face${out ? ' is-paused' : ''}" title="${escapeHtml(m.name)}${out ? ' — paused' : ''}">${avatarHtml(m.avatar, 'avatar-xs')}</span>`;
-      })
-      .join('') + (ordered.length > 4 ? `<span class="sharing-more">+${ordered.length - 4}</span>` : '');
+    if (!valueEl) return;
+    const part = a.participation;
+    const people = part ? part.members : state.members;
+    const total = people.length;
+    const sharing = part ? people.filter((m) => m.statusNow === 'in').length : total;
+    const paused = total - sharing;
+    valueEl.textContent = paused > 0 ? `${sharing} of ${total}` : String(total);
+    if (subEl) subEl.textContent = !total ? '' : paused > 0 ? `${paused} paused` : total === 1 ? 'just you' : 'all sharing';
   }
 
   // Direction is carried by an arrow glyph and the sign as well as the
@@ -1182,7 +1165,7 @@
   //
   // Pointer Events rather than touch events: the same code then covers a mouse
   // drag on desktop, where there is no touch to swipe with.
-  const SWIPE_REVEAL = 152;   // px — the two buttons plus their gaps (.tx-swipe-actions)
+  const SWIPE_REVEAL = 104;   // px — two round buttons plus their gaps (.tx-swipe-actions)
   const SWIPE_SLOP = 8;       // px of travel before we decide this is a swipe
   let openSwipeRow = null;
 
@@ -1224,9 +1207,9 @@
     actions.className = 'tx-swipe-actions';
     actions.innerHTML = `
         <button type="button" class="tx-swipe-btn tx-swipe-edit" data-action="edit" tabindex="-1"
-                aria-label="Edit ${escapeHtml(e.description)}"><svg class="icon-sm"><use href="#icon-edit"/></svg><span>Edit</span></button>
+                aria-label="Edit ${escapeHtml(e.description)}" title="Edit"><svg class="icon-sm"><use href="#icon-edit"/></svg></button>
         <button type="button" class="tx-swipe-btn tx-swipe-del" data-action="delete" tabindex="-1"
-                aria-label="Delete ${escapeHtml(e.description)}"><svg class="icon-sm"><use href="#icon-trash"/></svg><span>Delete</span></button>`;
+                aria-label="Delete ${escapeHtml(e.description)}" title="Delete"><svg class="icon-sm"><use href="#icon-trash"/></svg></button>`;
     row.appendChild(actions);
     row.appendChild(card);
 
@@ -1352,7 +1335,7 @@
     // why there is nothing to find.
     $('#tx-detail-actions').innerHTML = locked
       ? `<p class="txd-locked"><svg class="icon-sm"><use href="#icon-lock"/></svg><span>${escapeHtml(monthLabelLong(e.date.slice(0, 7)))} is closed — entries can no longer be changed.</span></p>`
-      : `<p class="txd-hint">Swipe this transaction left in History to edit or delete it.</p>`;
+      : '';
 
     $('#tx-detail-modal').classList.remove('hidden');
   }
@@ -2252,44 +2235,37 @@
     if (!list) return;
     const settle = a.settleUp;
     const part = a.participation;
-    const balances = (settle && settle.balances) || [];
-    const people = part ? part.members : [];
-    const byId = new Map(people.map((m) => [m.memberId, m]));
+    const roster = (settle && settle.balances) || [];
+    const byId = new Map((part ? part.members : []).map((m) => [m.memberId, m]));
     const statusOf = (id) => {
       const m = byId.get(id);
       if (!m) return 'in';
       return state.isCurrentMonth ? m.statusNow : m.statusAtMonthEnd;
     };
 
-    const inCount = balances.filter((b) => statusOf(b.memberId) === 'in').length;
-    $('#an-sharing-note').textContent = balances.length
-      ? (inCount === balances.length ? `All ${balances.length} in` : `${inCount} of ${balances.length} in`)
-      : '';
+    const inCount = roster.filter((b) => statusOf(b.memberId) === 'in').length;
+    $('#an-sharing-note').textContent = roster.length ? `${inCount} of ${roster.length}` : '';
 
-    if (!balances.length) {
+    if (!roster.length) {
       list.innerHTML = `<p class="chart-empty">Nobody was in the room in ${escapeHtml(monthLabelLong(a.month))}.</p>`;
       return;
     }
 
-    list.innerHTML = balances
+    // Faces in a row, names under them. Paused people stay, dimmed, with the
+    // one word that explains why — the only thing that differs between them.
+    list.innerHTML = roster
       .map((b) => {
         const m = byId.get(b.memberId);
         const out = statusOf(b.memberId) !== 'in';
         const next = state.isCurrentMonth && m && m.scheduled && m.scheduled.length ? m.scheduled[0] : null;
-        const sub = next
-          ? `${next.status === 'out' ? 'Pausing' : 'Resuming'} ${shortDay(next.effectiveFrom)}`
-          : out ? 'Paused' : 'Sharing';
+        const tag = next
+          ? `<span class="an-face-tag">${next.status === 'out' ? 'from' : 'back'} ${escapeHtml(shortDay(next.effectiveFrom))}</span>`
+          : out ? '<span class="an-face-tag">paused</span>' : '';
+        const name = b.memberId === state.member.id ? 'You' : b.name;
         return `
-        <div class="an-share-row${out ? ' is-paused' : ''}">
+        <div class="an-face${out ? ' is-paused' : ''}" title="${escapeHtml(b.name)}${out ? ' — paused' : ''}">
           ${avatarHtml(b.avatar, 'avatar-md')}
-          <div class="an-share-info">
-            <div class="an-share-name">${escapeHtml(b.name)}${b.memberId === state.member.id ? ' (You)' : ''}</div>
-            <div class="an-share-sub">${escapeHtml(sub)}</div>
-          </div>
-          <div class="an-share-figs">
-            <span class="an-share-paid">${money(b.paid)}</span>
-            <span class="an-share-of">share ${money(b.fairShare)}</span>
-          </div>
+          <span class="an-face-name">${escapeHtml(name)}</span>${tag}
         </div>`;
       })
       .join('');
@@ -2755,17 +2731,22 @@
     $('#sharing-modal').classList.remove('hidden');
   }
 
+  function verbShort(what, when) {
+    return what === 'out'
+      ? `From ${when} they stop sharing the bill and can't add spending.`
+      : `From ${when} they share the bill again.`;
+  }
+
   function updateSharingHint() {
     const isHost = !!state.member.isHost;
     const what = $('#sharing-what').value;
     const day = $('#sharing-from').value;
     const when = day ? shortDay(day) : 'that day';
-    const verb = what === 'out'
-      ? `stop sharing the bill from ${when}, and stop being able to add spending dated on or after it`
-      : `start sharing the bill again from ${when}`;
     $('#sharing-hint').textContent = isHost
-      ? `They will ${verb}. Spending already recorded before ${when} still counts, and that stretch of the month is still split with them in it.`
-      : `You are asking the host to let you ${verb}. It takes effect once they approve.`;
+      ? `${verbShort(what, when)} The month's settle-up works out who pays whom, counting them only for the days they shared.`
+      : what === 'out'
+        ? `Asks the host to pause you from ${when}: you stop sharing the bill and can't add spending. Takes effect once they approve.`
+        : `Asks the host to let you share the bill again from ${when}. Takes effect once they approve.`;
   }
 
   async function submitSharing(ev) {
