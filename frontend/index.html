@@ -369,7 +369,9 @@
                daily average and everybody's balance. -->
           <div class="hero-stat">
             <div class="hero-stat-label">Sharing</div>
-            <div class="hero-stat-value" id="home-sharing">—</div>
+            <!-- Just the faces. They share the tile's width, so a small room
+                 shows them large and a big room shrinks them to fit. -->
+            <div class="hero-stat-value hero-faces" id="home-sharing-faces" role="img"></div>
             <div class="hero-stat-sub" id="home-sharing-sub"></div>
           </div>
           <div class="hero-stat">
@@ -599,10 +601,6 @@
         <div class="info-row"><span>Lifetime spend</span><strong id="profile-lifetime">£0.00</strong></div>
       </div>
 
-      <div class="panel">
-        <h3 class="panel-title">Room members</h3>
-        <div class="member-list" id="profile-member-list"></div>
-      </div>
 
       <!-- Monthly sharing: Home shows who is sharing, this is where it is
            decided. A member asks; the host approves. -->
@@ -736,6 +734,42 @@
       <p class="field-hint" id="sharing-hint"></p>
       <button type="submit" class="btn-primary" id="sharing-submit">Send request</button>
     </form>
+  </div>
+</div>
+
+<!-- ============================= WHAT'S NEW ============================= -->
+<!-- Shown once to existing members after an update. It closes only from the
+     tick, so it cannot be dismissed by a stray tap on the backdrop. -->
+<div id="whatsnew-modal" class="modal-overlay hidden">
+  <div class="modal sheet whatsnew" role="dialog" aria-modal="true" aria-labelledby="whatsnew-title">
+    <div class="modal-handle"></div>
+    <div class="whatsnew-head">
+      <span class="whatsnew-kicker">Update</span>
+      <h2 id="whatsnew-title">What's new in Finledge</h2>
+      <p>A few improvements to how your room shares costs.</p>
+    </div>
+    <ul class="whatsnew-list">
+      <li class="wn-item">
+        <div class="wn-shot wn-shot-share" aria-hidden="true"><i></i><i></i><i></i><i class="wn-leaver"></i></div>
+        <div class="wn-text"><strong>Monthly sharing</strong><span>Pause or resume your share of the bill from any day. Ask your host in Profile → Monthly sharing.</span></div>
+      </li>
+      <li class="wn-item">
+        <div class="wn-shot wn-shot-split" aria-hidden="true"><b></b><b></b><b></b><b class="wn-leaver"></b></div>
+        <div class="wn-text"><strong>A fair split when someone leaves</strong><span>Each day's spending is shared only by the people in that day. Settle up shows who pays whom at month end.</span></div>
+      </li>
+      <li class="wn-item">
+        <div class="wn-shot wn-shot-swipe" aria-hidden="true"><em class="wn-btn wn-edit"></em><em class="wn-btn wn-del"></em><span class="wn-card"></span></div>
+        <div class="wn-text"><strong>Swipe to edit</strong><span>In History, swipe a transaction left to edit or delete it.</span></div>
+      </li>
+      <li class="wn-item">
+        <div class="wn-shot wn-shot-search" aria-hidden="true"><span class="wn-bar"><u></u></span></div>
+        <div class="wn-text"><strong>Search in History</strong><span>Search and filters now work on any month. Hosts can also hand the role to another member.</span></div>
+      </li>
+    </ul>
+    <label class="checkbox-row whatsnew-check"><input type="checkbox" id="whatsnew-read" /> I've read this update</label>
+    <button type="button" class="btn-primary" id="whatsnew-close" disabled>
+      <svg class="icon-sm"><use href="#icon-check"/></svg> Got it
+    </button>
   </div>
 </div>
 

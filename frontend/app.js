@@ -1049,15 +1049,23 @@
   // everyone shares just reads "4", because the second number would be
   // explaining something that has not happened.
   function renderHomeSharing(a) {
-    const valueEl = $('#home-sharing');
+    const facesEl = $('#home-sharing-faces');
     const subEl = $('#home-sharing-sub');
-    if (!valueEl) return;
+    if (!facesEl) return;
     const part = a.participation;
-    const people = part ? part.members : state.members;
+    const people = part
+      ? part.members
+      : state.members.map((m) => ({ memberId: m.id, name: m.name, avatar: m.avatar, statusNow: 'in' }));
     const total = people.length;
-    const sharing = part ? people.filter((m) => m.statusNow === 'in').length : total;
-    const paused = total - sharing;
-    valueEl.textContent = paused > 0 ? `${sharing} of ${total}` : String(total);
+    const paused = people.filter((m) => m.statusNow !== 'in').length;
+
+    // Sharing first, paused last and dimmed. Every face gets an equal slice of
+    // the tile (see .hero-faces), so nothing ever overlaps.
+    const ordered = [...people].sort((x, y) => (x.statusNow === y.statusNow ? 0 : x.statusNow === 'in' ? -1 : 1));
+    facesEl.innerHTML = ordered
+      .map((m) => `<span class="hero-face${m.statusNow !== 'in' ? ' is-paused' : ''}" title="${escapeHtml(m.name)}${m.statusNow !== 'in' ? ' — paused' : ''}">${avatarHtml(m.avatar, 'avatar-xs')}</span>`)
+      .join('');
+    facesEl.setAttribute('aria-label', paused ? `${total - paused} of ${total} sharing` : `${total} sharing`);
     if (subEl) subEl.textContent = !total ? '' : paused > 0 ? `${paused} paused` : total === 1 ? 'just you' : 'all sharing';
   }
 
@@ -2598,22 +2606,6 @@
       $('#profile-lifetime').textContent = money(state.roomInfo.totalLifetimeSpend);
     }
 
-    renderProfileMemberList();
-  }
-
-  function renderProfileMemberList() {
-    const wrap = $('#profile-member-list');
-    if (!wrap) return;
-    wrap.innerHTML = state.members
-      .map((m) => `
-        <div class="member-list-item">
-          ${avatarHtml(m.avatar, 'avatar-md')}
-          <div class="member-list-info">
-            <div class="member-list-name">${escapeHtml(m.name)}${m.id === state.member.id ? ' (You)' : ''}</div>
-            ${m.isHost ? '<div class="member-list-role">Host</div>' : ''}
-          </div>
-        </div>`)
-      .join('');
   }
 
   // =======================================================================
@@ -2661,7 +2653,9 @@
           .join('')
       : '';
 
-    // Everyone, with where they stand and anything already scheduled.
+    // Everyone, with where they stand and anything already scheduled. The host
+    // carries a Leader tag — the one person whose word changes the list.
+    const leaderIds = new Set((state.members || []).filter((x) => x.isHost).map((x) => x.id));
     $('#sharing-people').innerHTML = people
       .map((m) => {
         const out = m.statusNow !== 'in';
@@ -2673,7 +2667,7 @@
         <div class="sharing-person${out ? ' is-paused' : ''}">
           ${avatarHtml(m.avatar, 'avatar-md')}
           <div class="sharing-person-info">
-            <div class="sharing-person-name">${escapeHtml(m.name)}${m.memberId === state.member.id ? ' (You)' : ''}</div>
+            <div class="sharing-person-name"><span class="sharing-person-text">${escapeHtml(m.name)}${m.memberId === state.member.id ? ' (You)' : ''}</span>${leaderIds.has(m.memberId) ? '<span class="leader-tag">Leader</span>' : ''}</div>
             <div class="sharing-person-sub">${sub}</div>
           </div>
           <span class="sharing-pill${out ? ' is-paused' : ''}">${out ? 'Paused' : 'Sharing'}</span>
@@ -2934,8 +2928,41 @@
     localStorage.setItem(TOUR_STORAGE_KEY, '1');
   }
 
+  // ---- what's new -------------------------------------------------------
+  // Bump the key for the next update's notice. Stored per device, like the
+  // tour, and every access is guarded: private mode can throw on storage.
+  const WHATSNEW_KEY = 'finledge_whatsnew_2026_09';
+
+  function whatsNewSeen() {
+    try { return localStorage.getItem(WHATSNEW_KEY) === '1'; } catch (_) { return true; }
+  }
+
+  function markWhatsNewSeen() {
+    try { localStorage.setItem(WHATSNEW_KEY, '1'); } catch (_) { /* shown again next time */ }
+  }
+
+  function maybeShowWhatsNew() {
+    if (whatsNewSeen()) return;
+    $('#whatsnew-read').checked = false;
+    $('#whatsnew-close').disabled = true;
+    $('#whatsnew-modal').classList.remove('hidden');
+  }
+
+  function initWhatsNew() {
+    $('#whatsnew-read').addEventListener('change', (e) => { $('#whatsnew-close').disabled = !e.target.checked; });
+    $('#whatsnew-close').addEventListener('click', () => {
+      if (!$('#whatsnew-read').checked) return;
+      markWhatsNewSeen();
+      $('#whatsnew-modal').classList.add('hidden');
+    });
+  }
+
   function maybeStartTour() {
-    if (hasSeenTour()) return;
+    // Someone new gets the tour, which already covers today's app — they have
+    // no "before" for an update notice to compare against. Everyone else sees
+    // what changed, once.
+    if (hasSeenTour()) { maybeShowWhatsNew(); return; }
+    markWhatsNewSeen();
     switchView('home');
     requestAnimationFrame(() => requestAnimationFrame(startTour));
   }
@@ -3069,6 +3096,7 @@
     initConfirmModal();
     initSegmentNotice();
     initSharing();
+    initWhatsNew();
     initProfile();
     initDatePicker();
     initAvatarModal();
