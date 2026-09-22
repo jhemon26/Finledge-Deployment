@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<title>Finledge — Shared Spending Tracker for Flatmates &amp; Families</title>
+
+<!-- PWA / iOS standalone app support -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Finledge" />
+<meta name="theme-color" content="#1b1b25" />
+<meta name="color-scheme" content="dark" />
+<meta name="description" content="Track shared spending with flatmates, family or a partner. Create a room, log expenses, and see who owes who each month. Free shared expense tracker." />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-512.svg" />
+<link rel="icon" href="icon-512.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="styles.css" />
+
+<!-- SEO: canonical URL, social cards, structured data. The apex is canonical;
+     nginx 301s www -> apex so only one URL ever accumulates ranking signal. -->
+<link rel="canonical" href="https://finledge.uk/" />
+<meta name="robots" content="index, follow, max-image-preview:large" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Finledge" />
+<meta property="og:url" content="https://finledge.uk/" />
+<meta property="og:title" content="Finledge — Shared Spending Tracker for Flatmates &amp; Families" />
+<meta property="og:description" content="Track shared spending with flatmates, family or a partner. Create a room, log expenses, and see who owes who each month. Free shared expense tracker." />
+<meta property="og:image" content="https://finledge.uk/icon-512.svg" />
+<meta property="og:locale" content="en_GB" />
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Finledge — Shared Spending Tracker for Flatmates &amp; Families" />
+<meta name="twitter:description" content="Track shared spending with flatmates, family or a partner. Create a room, log expenses, and see who owes who each month. Free shared expense tracker." />
+<meta name="twitter:image" content="https://finledge.uk/icon-512.svg" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Finledge",
+  "url": "https://finledge.uk/",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any modern web browser",
+  "description": "Track shared spending with flatmates, family or a partner. Create a room, log expenses, and see who owes who each month. Free shared expense tracker.",
+  "inLanguage": "en-GB",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" }
+}
+</script>
+</head>
+<body>
+
+<!-- =========================================================================
+     SVG ICON LIBRARY
+
+     Two families, deliberately different in construction:
+
+     · UI CHROME (#icon-*) — 1.7px line work in a single colour. These are
+       controls, not content, so they inherit the surrounding ink alpha and
+       never carry an accent of their own.
+
+     · IDENTITY GLYPHS (#avatar-*, #cat-*, #prod-*) — flat multi-tone fills.
+       The primary shape is `currentColor` (the tint the host/member chose,
+       via .tint-*), the counter-tone is `.i2` (--ic-2), and `.i0` punches a
+       hole back to the ground for interior detail. Two chalk tints per glyph
+       is what makes them read as colourful at 16–44px without ever becoming
+       a large saturated fill.
+     ========================================================================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+
+    <!-- ── Brand mark ─────────────────────────────────────────────────── -->
+    <symbol id="icon-logo" viewBox="0 0 48 48">
+      <rect x="3.5" y="3.5" width="41" height="41" rx="11" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".38"/>
+      <rect x="12" y="26" width="4.4" height="11" rx="2.2" fill="currentColor" opacity=".55"/>
+      <rect x="21.8" y="19" width="4.4" height="18" rx="2.2" fill="currentColor" opacity=".8"/>
+      <rect x="31.6" y="12" width="4.4" height="25" rx="2.2" fill="currentColor"/>
+      <circle cx="34" cy="8" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".5"/>
+    </symbol>
+
+    <!-- ── UI chrome — line, monochrome ───────────────────────────────── -->
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="M4 11.2 12 4.4l8 6.8V19a1.4 1.4 0 0 1-1.4 1.4h-3.4v-5.6H9.8v5.6H5.4A1.4 1.4 0 0 1 4 19v-7.8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+    <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M4 19.5V13M9.3 19.5V7M14.7 19.5v-4.6M20 19.5V9.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="icon-activity" viewBox="0 0 24 24"><path d="M3 12.2h3.7l2.2-6.6 4 13.2 2.2-6.6H21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+    <symbol id="icon-profile" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.8 20c1.3-4 3.9-6 7.2-6s5.9 2 7.2 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="M6.4 6.4l11.2 11.2M17.6 6.4 6.4 17.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="M9.5 6.2 15.3 12l-5.8 5.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M4.4 19.6h3.8L18.4 9.4a1.9 1.9 0 0 0 0-2.7l-1.1-1.1a1.9 1.9 0 0 0-2.7 0L4.4 15.8v3.8Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.4 7.2 16.8 10.6" stroke="currentColor" stroke-width="1.7"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M5.2 7h13.6M9.4 7V5.2h5.2V7M6.6 7l.9 12.4h9l.9-12.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/><path d="M10.4 10.4v6M13.6 10.4v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".55"/></symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8.4" y="8.4" width="11.2" height="11.2" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M15.6 8.4V5.6a1.2 1.2 0 0 0-1.2-1.2H5.6a1.2 1.2 0 0 0-1.2 1.2v8.8a1.2 1.2 0 0 0 1.2 1.2h2.8" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2.6 12s3.5-6.2 9.4-6.2S21.4 12 21.4 12s-3.5 6.2-9.4 6.2S2.6 12 2.6 12Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+    <symbol id="icon-eye-off" viewBox="0 0 24 24"><path d="M3.4 3.4l17.2 17.2M10.6 5.9c.46-.07.93-.1 1.4-.1 5.9 0 9.4 6.2 9.4 6.2a15 15 0 0 1-3.1 3.8M6.9 6.9C3.9 8.7 2.6 12 2.6 12s3.5 6.2 9.4 6.2c1.2 0 2.3-.26 3.3-.68" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m19.6 19.6-4.2-4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="icon-filter" viewBox="0 0 24 24"><path d="M4.4 6.6h15.2M7.4 12h9.2M10.4 17.4h3.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="icon-warning" viewBox="0 0 24 24"><path d="M12 4.4 2.9 19.6h18.2L12 4.4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10.2v3.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1" fill="currentColor"/></symbol>
+    <symbol id="icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9.7 9.4a2.4 2.4 0 1 1 3.3 2.2c-.65.28-.95.76-.95 1.34v.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" fill="none"/><circle cx="12" cy="16.4" r="1" fill="currentColor"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="M5 12.4 9.8 17.2 19 8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3.8" y="5.4" width="16.4" height="15" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.8 9.8h16.4M8.2 3.6v3.6M15.8 3.6v3.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="icon-pencil-badge" viewBox="0 0 24 24"><path d="M4.4 19.6h3.8L18.4 9.4a1.9 1.9 0 0 0 0-2.7l-1.1-1.1a1.9 1.9 0 0 0-2.7 0L4.4 15.8v3.8Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-tag" viewBox="0 0 24 24"><path d="M11.6 3.8H5.4a1.6 1.6 0 0 0-1.6 1.6v6.2a1.6 1.6 0 0 0 .47 1.13l8.6 8.6a1.6 1.6 0 0 0 2.26 0l6.2-6.2a1.6 1.6 0 0 0 0-2.26l-8.6-8.6a1.6 1.6 0 0 0-1.13-.47Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="8.3" cy="8.3" r="1.4" fill="currentColor"/></symbol>
+    <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M9.4 4.4H6.2a1.8 1.8 0 0 0-1.8 1.8v11.6a1.8 1.8 0 0 0 1.8 1.8h3.2M15.2 15.8 19 12l-3.8-3.8M19 12H9.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-switch" viewBox="0 0 24 24"><path d="M7 7.4h11.4l-3-3M17 16.6H5.6l3 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-wallet" viewBox="0 0 24 24"><rect x="3.6" y="6.2" width="16.8" height="12.6" rx="2.8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.6 10.4h16.8" stroke="currentColor" stroke-width="1.7"/><circle cx="16.4" cy="14.8" r="1.2" fill="currentColor"/></symbol>
+    <symbol id="icon-scale" viewBox="0 0 24 24"><path d="M12 4.6v15M6.4 6.8h11.2M4 15.2h5.2L6.6 8.6 4 15.2ZM14.8 15.2H20l-2.6-6.6-2.6 6.6Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><path d="M8.6 20h6.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="icon-receipt" viewBox="0 0 24 24"><path d="M6 3.6h12v17.2l-2.4-1.6-2.4 1.6-2.4-1.6-2.4 1.6L6 19.2V3.6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.2 8.4h5.6M9.2 12.2h5.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="4.6" y="10.4" width="14.8" height="9.4" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M8.4 10.4V7.8a3.6 3.6 0 0 1 7.2 0v2.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.4V12l3.2 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><circle cx="9.4" cy="8.6" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.4 19.4c.9-3.4 3.1-5.2 6-5.2s5.1 1.8 6 5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 5.8a3.2 3.2 0 0 1 0 5.9M17.6 14.6c2 .55 3.3 2.2 3.9 4.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".6"/></symbol>
+    <symbol id="icon-place" viewBox="0 0 24 24"><path d="M12 21c4.2-4.6 6.3-7.9 6.3-10.5A6.3 6.3 0 0 0 5.7 10.5C5.7 13.1 7.8 16.4 12 21Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="10.4" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+    <symbol id="icon-trend-up" viewBox="0 0 24 24"><path d="M3.6 16.4 9.4 10.6l3.6 3.6 7.4-7.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.6 6.8h4.8v4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-trend-down" viewBox="0 0 24 24"><path d="M3.6 7.6 9.4 13.4l3.6-3.6 7.4 7.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.6 17.2h4.8v-4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="M4.6 12h14.8M13.8 6.4 19.4 12l-5.6 5.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-sparkle" viewBox="0 0 24 24"><path d="M12 3.4c.9 4.4 2.3 5.8 6.7 6.7-4.4.9-5.8 2.3-6.7 6.7-.9-4.4-2.3-5.8-6.7-6.7 4.4-.9 5.8-2.3 6.7-6.7Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M18.2 16.2c.4 1.9 1 2.5 2.9 2.9-1.9.4-2.5 1-2.9 2.9-.4-1.9-1-2.5-2.9-2.9 1.9-.4 2.5-1 2.9-2.9Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" opacity=".6"/></symbol>
+    <symbol id="icon-sliders" viewBox="0 0 24 24"><path d="M4.4 8h15.2M4.4 16h15.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="9.4" cy="8" r="2.4" fill="#24252f" stroke="currentColor" stroke-width="1.7"/><circle cx="15" cy="16" r="2.4" fill="#24252f" stroke="currentColor" stroke-width="1.7"/></symbol>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="13" y="4" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.7" opacity=".55"/><rect x="4" y="13" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.7" opacity=".55"/><rect x="13" y="13" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/></symbol>
+
+    <!-- =====================================================================
+         AVATAR GLYPHS — flat, two-tone
+         ===================================================================== -->
+    <symbol id="avatar-flame" viewBox="0 0 24 24"><path d="M12 2.2c2.6 3.1 5.2 6.7 5.2 10.3a5.2 5.2 0 0 1-10.4 0c0-1.7.7-2.9 1.6-4-.2 1.5.4 2.3 1 2.4-.3-2.6 1-4.2.8-6.4C10 3.9 11 3 12 2.2Z" fill="#ef8c3a"/><path d="M12 21.8a3 3 0 0 1-3-3c0-1.5 1.2-2.6 3-5 1.8 2.4 3 3.5 3 5a3 3 0 0 1-3 3Z" style="fill:#f2c94c"/></symbol>
+    <symbol id="avatar-wave" viewBox="0 0 24 24"><path d="M2 8.6c1.6-1.6 3.2-1.6 4.8 0s3.2 1.6 4.8 0 3.2-1.6 4.8 0 3.2 1.6 4.8 0" fill="none" stroke="#4aa3e0" stroke-width="2.2" stroke-linecap="round"/><path d="M2 13.4c1.6-1.6 3.2-1.6 4.8 0s3.2 1.6 4.8 0 3.2-1.6 4.8 0 3.2 1.6 4.8 0" fill="none" style="stroke:#7cc4ec;fill:none" stroke-width="2.2" stroke-linecap="round"/><path d="M2 18.2c1.6-1.6 3.2-1.6 4.8 0s3.2 1.6 4.8 0 3.2-1.6 4.8 0 3.2 1.6 4.8 0" fill="none" stroke="#4aa3e0" stroke-width="2.2" stroke-linecap="round" opacity=".45"/></symbol>
+    <symbol id="avatar-heart" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.8 8.4 2.6 5 6 5c2 0 3.3 1 4.5 2.5C11.7 6 13 5 15 5c3.4 0 5.2 3.4 3.5 7-2.5 4.5-6.5 9-6.5 9Z" fill="#e0574f"/><path d="M12 7.5C13.2 6 14.5 5 16.5 5c1.9 0 3.2 1.1 3.6 2.8-1.3-.5-2.8-.2-4 .9-1 .9-1.6 2-1.6 2S13.4 8.9 12 7.5Z" style="fill:#f28a84"/></symbol>
+    <symbol id="avatar-leaf" viewBox="0 0 24 24"><path d="M20 3.6C10 3.6 3.6 10 3.6 19c0 .7.5 1.2 1.2 1.2 9 0 15.6-6.4 15.6-16.6Z" fill="#5ab56a"/><path d="M5.4 19.6C8 13.4 12.4 9 18.6 6.4" fill="none" style="stroke:#8ed48f;fill:none" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="avatar-star" viewBox="0 0 24 24"><path d="M12 2.4 14.8 9l7.2.6-5.5 4.7 1.7 7L12 17.6 5.8 21.3l1.7-7L2 9.6 9.2 9 12 2.4Z" fill="#f2c94c"/><path d="M12 2.4 14.8 9l7.2.6-5.5 4.7 1.7 7L12 17.6V2.4Z" style="fill:#e8b73f"/></symbol>
+    <symbol id="avatar-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.8" fill="#f2c94c"/><g style="stroke:#ef8c3a;fill:none" stroke-width="2.1" stroke-linecap="round"><path d="M12 1.6v2.8M12 19.6v2.8M1.6 12h2.8M19.6 12h2.8M4.6 4.6l2 2M17.4 17.4l2 2M4.6 19.4l2-2M17.4 6.6l2-2"/></g></symbol>
+    <symbol id="avatar-feather" viewBox="0 0 24 24"><path d="M19.6 3.4c-9 1-11.2 8-11.2 13.2 5.2 0 10.2-3.2 11.2-13.2Z" fill="#7cc4ec"/><path d="M19.6 3.4c-7.2.6-13.2 5.6-15.2 16.2" fill="none" style="stroke:#4aa3e0;fill:none" stroke-width="1.9" stroke-linecap="round"/><path d="M9 15.2 14.4 9.8M7 18.2l4.6-4.6" style="stroke:#4aa3e0;fill:none" stroke-width="1.5" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="avatar-moon" viewBox="0 0 24 24"><path d="M20.2 13.6A8.6 8.6 0 1 1 10.4 3.8a7 7 0 1 0 9.8 9.8Z" fill="#f4e6a8"/><circle cx="16.4" cy="5.4" r="1.5" style="fill:#d9c98a"/><circle cx="19.6" cy="9" r="1" style="fill:#d9c98a"/></symbol>
+    <symbol id="avatar-diamond" viewBox="0 0 24 24"><path d="M7 3.2h10l4.2 6.2L12 21 2.8 9.4 7 3.2Z" fill="#7cd9e0"/><path d="M2.8 9.4h18.4L12 21 2.8 9.4Z" style="fill:#4aa3e0"/><path d="M7 3.2 9.4 9.4h5.2L17 3.2" fill="none" style="stroke:#f4f5f8;fill:none" stroke-width="1.2" opacity=".5"/></symbol>
+    <symbol id="avatar-bolt" viewBox="0 0 24 24"><path d="M13.4 2.4 4 14.2h6.2l-1.6 7.4L20 9.6h-6.4l1.8-7.2Z" fill="#f2c94c"/><path d="M10.2 14.2 8.6 21.6 20 9.6h-6.4l-3.4 4.6Z" style="fill:#f0a92f"/></symbol>
+    <symbol id="avatar-paw" viewBox="0 0 24 24"><circle cx="6.8" cy="8.6" r="2.2" style="fill:#d9a066"/><circle cx="11.9" cy="6.2" r="2.2" fill="#b07b4f"/><circle cx="17.2" cy="8.6" r="2.2" style="fill:#d9a066"/><path d="M12 11c-4 0-6.6 2.7-6.6 5.5 0 2.7 2.2 4.7 4.6 3.7 1.3-.5 2.7-.5 4 0 2.4 1 4.6-1 4.6-3.7C18.6 13.7 16 11 12 11Z" fill="#b07b4f"/></symbol>
+    <symbol id="avatar-rocket" viewBox="0 0 24 24"><path d="M12 2c3 2.4 5 6.6 5 10.6 0 1.7-.3 3-.8 4.1H7.8c-.5-1.1-.8-2.4-.8-4.1C7 8.6 9 4.4 12 2Z" fill="#c3c9d6"/><path d="M7.4 15.4 4.6 18l1-4M16.6 15.4 19.4 18l-1-4" style="fill:#e0574f"/><path d="M10 19.2h4l-2 3-2-3Z" style="fill:#e0574f"/><circle cx="12" cy="9.6" r="1.9" style="fill:#7cc4ec"/></symbol>
+    <symbol id="avatar-bird" viewBox="0 0 24 24"><path d="M2.4 12.4c1.9-3.6 5.6-5.4 9.2-4.9.3-1.1 1.1-1.9 2.2-2.3l.6 2.1c.7-.1 1.4 0 2 .3l2.5-1.7-.4 2.7 3.1-.1-2.3 2.1c-.6 4.4-4.4 7.7-8.9 7.7-1.7 0-3.2-.4-4.6-1.2 1.6 0 2.8-.4 3.6-1-2.1-.1-3.6-1.2-4.3-2.8.6.2 1.2.2 1.8 0-1.7-.4-2.9-1.4-3.5-2.9Z" fill="#4aa3e0"/><path d="M11.6 7.5c-3.6-.5-7.3 1.3-9.2 4.9.6 1.5 1.8 2.5 3.5 2.9 2.4-4.1 4.2-6.3 5.7-7.8Z" style="fill:#3d7fb8"/><circle cx="16.4" cy="8.4" r=".95" style="fill:#2b2f3b"/></symbol>
+    <symbol id="avatar-cat" viewBox="0 0 24 24"><path d="M5.6 2.2 8.9 7.2h6.2l3.3-5 .9 9.1A7 7.2 0 0 1 12 18.2 7 7.2 0 0 1 4.7 11.3l.9-9.1Z" fill="#f0a64a"/><path d="M12 12.6c1.5 0 2.6.7 2.6 1.6 0 1.1-1.2 2-2.6 2s-2.6-.9-2.6-2c0-.9 1.1-1.6 2.6-1.6Z" style="fill:#f7c9a8"/><circle cx="9.5" cy="10.4" r="1.05" style="fill:#2b2f3b"/><circle cx="14.5" cy="10.4" r="1.05" style="fill:#2b2f3b"/></symbol>
+    <symbol id="avatar-dog" viewBox="0 0 24 24"><path d="M5 8C3 6 2.4 3 3.5 2c1.8 0 3.7 2.1 4.4 4.4M19 8c2-2 2.6-5 1.5-6-1.8 0-3.7 2.1-4.4 4.4" fill="#b07b4f"/><ellipse cx="12" cy="13.2" rx="7" ry="6.6" fill="#b07b4f"/><ellipse cx="12" cy="15.6" rx="3" ry="2.3" style="fill:#e6c9a8"/><circle cx="9.3" cy="11.8" r="1.05" style="fill:#2b2f3b"/><circle cx="14.7" cy="11.8" r="1.05" style="fill:#2b2f3b"/></symbol>
+    <symbol id="avatar-flower" viewBox="0 0 24 24"><circle cx="12" cy="6.6" r="3.5" fill="#ef7fa8"/><circle cx="17.4" cy="11.4" r="3.5" fill="#ef7fa8"/><circle cx="12" cy="16.2" r="3.5" fill="#ef7fa8"/><circle cx="6.6" cy="11.4" r="3.5" fill="#ef7fa8"/><circle cx="12" cy="11.4" r="2.7" style="fill:#f2c94c"/><path d="M12 16.8v4.8" style="stroke:#5ab56a;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="avatar-ninja" viewBox="0 0 24 24"><path d="M4 9.4a8 8 0 0 1 16 0v2.8a8 8 0 0 1-16 0V9.4Z" fill="#5b6275"/><path d="M2 8.8c2-1.3 4-1.9 6-1.9M22 8.8c-2-1.3-4-1.9-6-1.9" style="stroke:#454b5c;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/><rect x="5.4" y="10.2" width="5.6" height="2.7" rx="1.35" style="fill:#e6e8ef"/><rect x="13" y="10.2" width="5.6" height="2.7" rx="1.35" style="fill:#e6e8ef"/></symbol>
+    <symbol id="avatar-panda" viewBox="0 0 24 24"><circle cx="6" cy="6.2" r="3.1" style="fill:#454b5c"/><circle cx="18" cy="6.2" r="3.1" style="fill:#454b5c"/><circle cx="12" cy="13.2" r="8" fill="#f4f5f8"/><ellipse cx="8.7" cy="12" rx="2.4" ry="3" style="fill:#454b5c"/><ellipse cx="15.3" cy="12" rx="2.4" ry="3" style="fill:#454b5c"/><ellipse cx="12" cy="16.8" rx="1.5" ry="1.05" style="fill:#454b5c"/></symbol>
+    <symbol id="avatar-fox" viewBox="0 0 24 24"><path d="M3.6 2.8 8 8h8l4.4-5.2-1 8.2c0 4.6-3.5 8.2-7.4 8.2S4.6 15.6 4.6 11L3.6 2.8Z" fill="#ef8c3a"/><path d="M8.8 11.2 12 14.4l3.2-3.2v3.9c0 1.6-1.4 2.9-3.2 2.9s-3.2-1.3-3.2-2.9v-3.9Z" style="fill:#f7f3ee"/><circle cx="9.2" cy="9.6" r=".95" style="fill:#2b2f3b"/><circle cx="14.8" cy="9.6" r=".95" style="fill:#2b2f3b"/></symbol>
+    <symbol id="avatar-owl" viewBox="0 0 24 24"><path d="M12 2 9.2 4.8l1.5 1A7.5 7.5 0 0 0 4 13.4C4 18.1 7.6 22 12 22s8-3.9 8-8.6a7.5 7.5 0 0 0-6.7-7.6l1.5-1L12 2Z" fill="#8a5a36"/><circle cx="9" cy="13.2" r="2.7" style="fill:#f7f3ee"/><circle cx="15" cy="13.2" r="2.7" style="fill:#f7f3ee"/><circle cx="9" cy="13.2" r="1.15" fill="#8a5a36"/><circle cx="15" cy="13.2" r="1.15" fill="#8a5a36"/><path d="M10.8 15.6 12 17.3l1.2-1.7Z" style="fill:#ef8c3a"/></symbol>
+    <symbol id="avatar-butterfly" viewBox="0 0 24 24"><path d="M11.4 6.4C10.4 3.2 6.4 2 4.4 4c-2.3 2.3-1 6.6 3 7.4-4 .5-5.6 4.8-3.3 7.1 2 2 6 1 7.3-2.1" fill="#9b6fd4"/><path d="M12.6 6.4C13.6 3.2 17.6 2 19.6 4c2.3 2.3 1 6.6-3 7.4 4 .5 5.6 4.8 3.3 7.1-2 2-6 1-7.3-2.1" style="fill:#ef7fa8"/><rect x="11.2" y="4.2" width="1.6" height="15" rx=".8" fill="#9b6fd4"/></symbol>
+    <symbol id="avatar-robot" viewBox="0 0 24 24"><rect x="4.6" y="8" width="14.8" height="12.2" rx="3.2" fill="#b9bfcc"/><circle cx="12" cy="3.8" r="1.7" style="fill:#4aa3e0"/><path d="M12 5.5V8" style="stroke:#4aa3e0;fill:none" stroke-width="1.7"/><circle cx="9.3" cy="13.4" r="1.7" style="fill:#2e3240"/><circle cx="14.7" cy="13.4" r="1.7" style="fill:#2e3240"/><rect x="9" y="16.6" width="6" height="1.7" rx=".85" style="fill:#2e3240"/></symbol>
+    <symbol id="avatar-crown" viewBox="0 0 24 24"><path d="M3.4 8.4 7 10.8 12 4.4l5 6.4 3.6-2.4-1.7 10.4H5.1L3.4 8.4Z" fill="#e8b73f"/><path d="M5.1 18.8h13.8l-.5 2.8H5.6l-.5-2.8Z" style="fill:#c4952b"/><circle cx="12" cy="13.6" r="1.4" style="fill:#e0574f"/></symbol>
+    <symbol id="avatar-koala" viewBox="0 0 24 24"><circle cx="4.8" cy="7.4" r="3.6" style="fill:#b8c0cb"/><circle cx="19.2" cy="7.4" r="3.6" style="fill:#b8c0cb"/><circle cx="12" cy="13.2" r="7.4" fill="#9aa3b0"/><ellipse cx="12" cy="15" rx="2.7" ry="2.1" style="fill:#3f4450"/><circle cx="9.3" cy="11.4" r="1.05" style="fill:#3f4450"/><circle cx="14.7" cy="11.4" r="1.05" style="fill:#3f4450"/></symbol>
+    <symbol id="avatar-whale" viewBox="0 0 24 24"><path d="M2.4 12.6c0-3.4 3.6-5.6 8-5.6s8 2.2 8 5.6c0 3.6-3.4 6.4-8 6.4s-8-2.8-8-6.4Z" fill="#4a86c4"/><path d="M18.4 12.4c1.4-.9 2.6-1.7 3.2-2.4v6c-.7-.8-1.9-1.9-3.2-3.6Z" style="fill:#7cc4ec"/><path d="M10.4 4.4c0-1.3 1-2.2 2.2-2.2" fill="none" style="stroke:#7cc4ec;fill:none" stroke-width="1.7" stroke-linecap="round"/><circle cx="6.6" cy="12" r="1.05" style="fill:#f4f5f8"/></symbol>
+    <symbol id="avatar-mountain" viewBox="0 0 24 24"><path d="M2 19.4 9.4 6.6l4.2 7.2 2.2-3.4L22 19.4H2Z" fill="#8a91a3"/><path d="M9.4 6.6 13.6 13.8H5.2L9.4 6.6Z" style="fill:#6e7488"/><path d="M7.6 9.8h3.6l-1.8-3.2-1.8 3.2Z" style="fill:#f4f5f8"/></symbol>
+    <symbol id="avatar-anchor" viewBox="0 0 24 24"><circle cx="12" cy="4.6" r="2.4" fill="none" stroke="#c3c9d6" stroke-width="1.9"/><path d="M12 7v13.4" stroke="#c3c9d6" stroke-width="1.9" stroke-linecap="round" fill="none"/><path d="M7.4 10.2h9.2" style="stroke:#9aa3b0;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/><path d="M4 13.6c0 4 3.6 6.8 8 6.8s8-2.8 8-6.8" fill="none" style="stroke:#9aa3b0;fill:none" stroke-width="1.9" stroke-linecap="round"/></symbol>
+    <symbol id="avatar-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#3d7fb8"/><path d="M15.6 8.4 13.4 13.4 8.4 15.6l2.2-5 5-2.2Z" style="fill:#f4f5f8"/><circle cx="12" cy="12" r="1.3" style="fill:#e0574f"/></symbol>
+    <symbol id="avatar-planet" viewBox="0 0 24 24"><circle cx="12" cy="11.4" r="6.4" fill="#e8a04a"/><ellipse cx="12" cy="12.6" rx="10.6" ry="3.4" transform="rotate(-19 12 12.6)" fill="none" style="stroke:#7cc4ec;fill:none" stroke-width="1.8"/><circle cx="9.6" cy="9.4" r="1.4" style="fill:#c47f2e"/></symbol>
+    <symbol id="avatar-comet" viewBox="0 0 24 24"><circle cx="16.4" cy="7.6" r="4.6" fill="#f2c94c"/><path d="M12.6 10.6 3 20.2M9 12.4l-4.4 4.4M14.4 15.4 10 19.8" style="stroke:#ef8c3a;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="avatar-mushroom" viewBox="0 0 24 24"><path d="M3 12.4a9 9 0 0 1 18 0c0 .9-.7 1.6-1.6 1.6H4.6A1.6 1.6 0 0 1 3 12.4Z" fill="#e0574f"/><path d="M9.6 14h4.8v5.4a2.4 2.4 0 0 1-4.8 0V14Z" style="fill:#f4ede0"/><circle cx="8" cy="9.4" r="1.5" style="fill:#f7f3ee"/><circle cx="15.4" cy="10.2" r="1.1" style="fill:#f7f3ee"/></symbol>
+    <symbol id="avatar-cactus" viewBox="0 0 24 24"><rect x="9.6" y="4" width="4.8" height="16.4" rx="2.4" fill="#5ab56a"/><path d="M9.6 13.4H7.4a2.6 2.6 0 0 1-2.6-2.6V8.6" fill="none" style="stroke:#3f8f4d;fill:none" stroke-width="2.2" stroke-linecap="round"/><path d="M14.4 11.4h2.2a2.6 2.6 0 0 0 2.6-2.6V7" fill="none" style="stroke:#3f8f4d;fill:none" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="avatar-penguin" viewBox="0 0 24 24"><path d="M12 2.4c4 0 6.6 3.2 6.6 8.2 0 6-2.4 11-6.6 11s-6.6-5-6.6-11c0-5 2.6-8.2 6.6-8.2Z" fill="#4a5160"/><path d="M12 7.6c2 0 3.4 2 3.4 5.6 0 4-1.4 7.2-3.4 7.2s-3.4-3.2-3.4-7.2c0-3.6 1.4-5.6 3.4-5.6Z" style="fill:#f7f3ee"/><path d="M12 8.4 13.6 10.4h-3.2L12 8.4Z" style="fill:#ef8c3a"/><circle cx="9.9" cy="7" r=".95" style="fill:#f7f3ee"/><circle cx="14.1" cy="7" r=".95" style="fill:#f7f3ee"/></symbol>
+    <symbol id="avatar-bear" viewBox="0 0 24 24"><circle cx="5.6" cy="6.6" r="3.1" style="fill:#b98a5f"/><circle cx="18.4" cy="6.6" r="3.1" style="fill:#b98a5f"/><circle cx="12" cy="13.4" r="7.6" fill="#a06b42"/><ellipse cx="12" cy="15.6" rx="3.2" ry="2.5" style="fill:#4a3220"/><circle cx="9.4" cy="11.6" r="1.05" style="fill:#4a3220"/><circle cx="14.6" cy="11.6" r="1.05" style="fill:#4a3220"/></symbol>
+    <symbol id="avatar-turtle" viewBox="0 0 24 24"><path d="M4 14.2a8 8 0 0 1 16 0Z" fill="#5ab56a"/><path d="M12 6.2v8M6.6 9.2l1.9 5M17.4 9.2l-1.9 5" style="stroke:#3f8f4d;fill:none" stroke-width="1.3" opacity=".55" fill="none"/><path d="M20 14.2c1.4 0 2.4 1 2.4 2.2s-1 2-2.4 2M3.4 16.6h2M18 16.6h2" style="stroke:#8ed48f;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/><circle cx="21.4" cy="16.4" r=".9" style="fill:#8ed48f"/></symbol>
+    <symbol id="avatar-dolphin" viewBox="0 0 24 24"><path d="M2.6 8.4c5.6-1.4 10.8.6 13.6 5 1.6-.4 3.4-1.6 5.2-3.6-.4 5.8-4.4 10-9.6 10-4.4 0-8-2.6-9.2-6.6 1.6.8 3.2 1 4.8.4-2.4-1-4-2.8-4.8-5.2Z" fill="#6fa8d4"/><path d="M8.6 8.2c2.8.9 5.2 2.7 7.6 5.2 1.6-.4 3.4-1.6 5.2-3.6-3.2 1.2-6.2 1-12.8-1.6Z" style="fill:#cfe4f2"/><circle cx="6.2" cy="10.4" r=".95" style="fill:#2b2f3b"/></symbol>
+
+    <!-- =====================================================================
+         CATEGORY GLYPHS — flat, two-tone
+         ===================================================================== -->
+    <symbol id="cat-groceries" viewBox="0 0 24 24"><path d="M6.4 8h13.2l-1.5 9.4a2 2 0 0 1-2 1.7H9.9a2 2 0 0 1-2-1.7L6.4 8Z" fill="#e2703a"/><path d="M2.6 4h2.6a1 1 0 0 1 1 .84L6.6 8" fill="none" style="stroke:#6b7183;fill:none" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="21" r="1.5" style="fill:#6b7183"/><circle cx="16.6" cy="21" r="1.5" style="fill:#6b7183"/></symbol>
+    <symbol id="cat-eatingout" viewBox="0 0 24 24"><path d="M5.6 2.6v6a2.4 2.4 0 0 0 4.8 0v-6" fill="none" stroke="#c3c9d6" stroke-width="1.8" stroke-linecap="round"/><path d="M8 2.6v18.8" stroke="#c3c9d6" stroke-width="1.8" stroke-linecap="round"/><path d="M17.6 2.6c-2 0-3.2 2.2-3.2 5.4s1.2 4.4 3.2 4.4v9" fill="none" style="stroke:#9aa3b0;fill:none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="cat-transport" viewBox="0 0 24 24"><path d="M3.4 16.4V11l1.8-4a2 2 0 0 1 1.8-1.2h10a2 2 0 0 1 1.8 1.2l1.8 4v5.4H3.4Z" fill="#4aa3e0"/><path d="M5.4 10.4 6.6 7.6h10.8l1.2 2.8H5.4Z" style="fill:#cfe4f2"/><rect x="3.4" y="16" width="4.2" height="3" rx="1.2" style="fill:#3d7fb8"/><rect x="16.4" y="16" width="4.2" height="3" rx="1.2" style="fill:#3d7fb8"/></symbol>
+    <symbol id="cat-shopping" viewBox="0 0 24 24"><path d="M5.4 7.6h13.2l-1.1 12.2a1.8 1.8 0 0 1-1.8 1.6H8.3a1.8 1.8 0 0 1-1.8-1.6L5.4 7.6Z" fill="#ef7fa8"/><path d="M9 8.4V6a3 3 0 0 1 6 0v2.4" fill="none" style="stroke:#c4558a;fill:none" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="cat-health" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9C.8 8.4 2.6 5 6 5c2 0 3.3 1 4.5 2.5C11.7 6 13 5 15 5c3.4 0 5.2 3.4 3.5 7-2.5 4.5-6.5 9-6.5 9Z" fill="#e0574f"/><path d="M10.6 8.8h2.8v2.6H16v2.8h-2.6v2.6h-2.8v-2.6H8v-2.8h2.6V8.8Z" style="fill:#f4f5f8"/></symbol>
+    <symbol id="cat-entertainment" viewBox="0 0 24 24"><path d="M3.6 7.6a2 2 0 0 1 2-2h12.8a2 2 0 0 1 2 2v2.2a2.2 2.2 0 0 0 0 4.4v2.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2v-2.2a2.2 2.2 0 0 0 0-4.4V7.6Z" fill="#9b6fd4"/><path d="M12 6.4v11.2" style="stroke:#f4f5f8;fill:none" stroke-width="1.6" stroke-dasharray="2.2 2.4" opacity=".7" fill="none"/><circle cx="7.6" cy="12" r="1.3" style="fill:#f2c94c"/></symbol>
+    <symbol id="cat-fuel" viewBox="0 0 24 24"><path d="M4.6 20.6V5.6a2 2 0 0 1 2-2h5.6a2 2 0 0 1 2 2v15H4.6Z" fill="#e0574f"/><rect x="7" y="6.4" width="4.8" height="3.4" rx="1" style="fill:#f7f3ee"/><path d="M3.6 21h12M16.6 8l2.8 2.8v6a1.6 1.6 0 0 1-3.2 0V13h-1.4" fill="none" style="stroke:#9aa3b0;fill:none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="cat-parking" viewBox="0 0 24 24"><rect x="3.4" y="3.4" width="17.2" height="17.2" rx="4.4" fill="#4aa3e0"/><path d="M9.4 17.4V6.8h3.8a3.4 3.4 0 0 1 0 6.8H9.4" fill="none" style="stroke:#f4f5f8;fill:none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="cat-rent" viewBox="0 0 24 24"><path d="M3.4 11.4 12 3.8l8.6 7.6v8.4a1.2 1.2 0 0 1-1.2 1.2H4.6a1.2 1.2 0 0 1-1.2-1.2v-8.4Z" fill="#e2703a"/><rect x="9.4" y="14" width="5.2" height="7" rx="1" style="fill:#f7f3ee"/><path d="M16.2 6.2h2.6v3.4" style="fill:#f2c94c"/></symbol>
+    <symbol id="cat-carfinance" viewBox="0 0 24 24"><circle cx="8" cy="15.4" r="3.6" fill="none" stroke="#6b7183" stroke-width="2"/><path d="M10.6 12.8 19.4 4" style="stroke:#f2c94c;fill:none" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M16 6.6l2.2 2.2M13.4 9.2l2.2 2.2" style="stroke:#f2c94c;fill:none" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-insurance" viewBox="0 0 24 24"><path d="M12 2.6 19.4 5.8v6.4c0 4.6-3 7.8-7.4 9.4-4.4-1.6-7.4-4.8-7.4-9.4V5.8L12 2.6Z" fill="#5ab56a"/><path d="M8.8 11.8 11 14l4.4-4.4" fill="none" style="stroke:#f4f5f8;fill:none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="cat-phone" viewBox="0 0 24 24"><rect x="6.6" y="2.2" width="10.8" height="19.6" rx="2.8" fill="#7a8092"/><rect x="8.4" y="5" width="7.2" height="11.4" rx="1" style="fill:#7cc4ec"/><circle cx="12" cy="19" r="1.2" style="fill:#4aa3e0"/></symbol>
+    <symbol id="cat-subscriptions" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 13.4-5.9" fill="none" stroke="#4aa3e0" stroke-width="2" stroke-linecap="round"/><path d="M20 12a8 8 0 0 1-13.4 5.9" fill="none" style="stroke:#5ab56a;fill:none" stroke-width="2" stroke-linecap="round"/><path d="M17.4 2.8v3.6h-3.6" fill="none" stroke="#4aa3e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.6 21.2v-3.6h3.6" fill="none" style="stroke:#5ab56a;fill:none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="cat-roadtax" viewBox="0 0 24 24"><path d="M5.6 2.8h9L18.8 7v14.2H5.6V2.8Z" fill="#f4f5f8"/><path d="M14.6 2.8 18.8 7h-4.2V2.8Z" style="fill:#c3c9d6"/><path d="M8.6 11h6.4M8.6 14.4h6.4M8.6 17.8h3.4" style="stroke:#6b7183;fill:none" stroke-width="1.6" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-utilities" viewBox="0 0 24 24"><path d="M13.4 2.2 5.6 13.4h5.2l-1.2 8.4 8.8-11.6h-5.4l.4-8Z" fill="#f2c94c"/><path d="M10.8 13.4H5.6L13.4 2.2l-2.6 11.2Z" style="fill:#f0a92f"/></symbol>
+    <symbol id="cat-internet" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.8" fill="#4aa3e0"/><path d="M3.2 12h17.6M12 3.2c4.4 4.8 4.4 12.8 0 17.6-4.4-4.8-4.4-12.8 0-17.6Z" fill="none" style="stroke:#f4f5f8;fill:none" stroke-width="1.5" opacity=".65"/><circle cx="12" cy="12" r="1.5" style="fill:#5ab56a"/></symbol>
+    <symbol id="cat-water" viewBox="0 0 24 24"><path d="M12 2.4c4 5 6.4 8.2 6.4 11.4A6.4 6.4 0 0 1 5.6 13.8C5.6 10.6 8 7.4 12 2.4Z" fill="#4aa3e0"/><path d="M8.8 14.4a3.4 3.4 0 0 0 3.4 3.4" fill="none" style="stroke:#cfe4f2;fill:none" stroke-width="1.7" stroke-linecap="round" opacity=".8"/></symbol>
+    <symbol id="cat-electricity" viewBox="0 0 24 24"><rect x="4.6" y="2.6" width="14.8" height="14.4" rx="3.2" fill="#f2c94c"/><path d="M9.6 5.6v3.8M14.4 5.6v3.8" style="stroke:#4a4f5c;fill:none" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M8.4 17v1.4a3.6 3.6 0 0 0 7.2 0V17" fill="none" style="stroke:#9aa3b0;fill:none" stroke-width="1.9"/><path d="M12 21.8V19" style="stroke:#9aa3b0;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-gas" viewBox="0 0 24 24"><path d="M12 2.6c2.4 3 4.8 6 4.8 9.6a4.8 4.8 0 0 1-9.6 0c0-1.6.6-2.8 1.4-3.8-.2 1.4.4 2.2 1 2.3-.3-2.4 1-3.8.8-5.9.5-.9 1.1-1.6 1.6-2.2Z" fill="#ef8c3a"/><path d="M4.6 19.4h14.8M6.6 22h10.8" style="stroke:#9aa3b0;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-gym" viewBox="0 0 24 24"><rect x="2" y="9.6" width="3" height="4.8" rx="1.2" style="fill:#3a3f4f"/><rect x="19" y="9.6" width="3" height="4.8" rx="1.2" style="fill:#3a3f4f"/><rect x="5" y="7.4" width="3.6" height="9.2" rx="1.5" fill="#838a9c"/><rect x="15.4" y="7.4" width="3.6" height="9.2" rx="1.5" fill="#838a9c"/><rect x="8.4" y="10.6" width="7.2" height="2.8" rx="1" fill="#838a9c"/></symbol>
+    <symbol id="cat-education" viewBox="0 0 24 24"><path d="M12 3.4 22 8.4l-10 5-10-5 10-5Z" fill="#7a8092"/><path d="M6.4 11.2v5c0 1.9 2.5 3.4 5.6 3.4s5.6-1.5 5.6-3.4v-5L12 13.8l-5.6-2.6Z" style="fill:#5b6275"/><path d="M20.6 9.2v5.4" style="stroke:#e8b73f;fill:none" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".8"/></symbol>
+    <symbol id="cat-books" viewBox="0 0 24 24"><path d="M3.4 4.6h6a3 3 0 0 1 3 3v12a2.4 2.4 0 0 0-2.4-2.4h-6.6V4.6Z" fill="#e0574f"/><path d="M20.6 4.6h-6a3 3 0 0 0-3 3v12a2.4 2.4 0 0 1 2.4-2.4h6.6V4.6Z" style="fill:#4aa3e0"/></symbol>
+    <symbol id="cat-travel" viewBox="0 0 24 24"><rect x="2.6" y="7.4" width="18.8" height="12.4" rx="2.6" fill="#b07b4f"/><path d="M8.6 7.4V5.6a1.8 1.8 0 0 1 1.8-1.8h3.2a1.8 1.8 0 0 1 1.8 1.8v1.8" fill="none" style="stroke:#8a5a36;fill:none" stroke-width="1.9" stroke-linejoin="round"/><path d="M2.6 12.8h18.8" style="stroke:#d9a066;fill:none" stroke-width="1.6" opacity=".7" fill="none"/></symbol>
+    <symbol id="cat-hotel" viewBox="0 0 24 24"><path d="M2.6 18.6V8.4a1.6 1.6 0 0 1 1.6-1.6h1.4a1.6 1.6 0 0 1 1.6 1.6v2.2h11.2a3.6 3.6 0 0 1 3.6 3.6v4.4H2.6Z" fill="#4a86c4"/><circle cx="10" cy="9.6" r="2.4" style="fill:#f4f5f8"/><path d="M2.6 18.6v2.4M21.4 18.6v2.4" style="stroke:#9aa3b0;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-flight" viewBox="0 0 24 24"><path d="M2.4 13.6 21 6.6a1.6 1.6 0 0 1 1.2 2.9l-4.6 2.7-1 8.4-2.4-1.2-.5-5.6-5.2 3-.4 3.2-2-.6-.3-3.4-3.4-1.2v-1.2Z" fill="#c3c9d6"/><path d="m13.7 13.8-.5-5.6 3.6-1.3-3.1 6.9Z" style="fill:#4aa3e0"/></symbol>
+    <symbol id="cat-taxi" viewBox="0 0 24 24"><path d="M3.4 16.4V11l1.8-4a2 2 0 0 1 1.8-1.2h10a2 2 0 0 1 1.8 1.2l1.8 4v5.4H3.4Z" fill="#f2c94c"/><path d="M5.4 10.4 6.6 7.6h10.8l1.2 2.8H5.4Z" style="fill:#cfe4f2"/><rect x="8.6" y="1.6" width="6.8" height="3" rx="1" style="fill:#3a3f4f"/><rect x="3.4" y="16" width="4.2" height="3" rx="1.2" style="fill:#3a3f4f"/><rect x="16.4" y="16" width="4.2" height="3" rx="1.2" style="fill:#3a3f4f"/></symbol>
+    <symbol id="cat-transit" viewBox="0 0 24 24"><path d="M5.4 4.6a2 2 0 0 1 2-2h9.2a2 2 0 0 1 2 2v11.8a2 2 0 0 1-2 2H7.4a2 2 0 0 1-2-2V4.6Z" fill="#5ab56a"/><rect x="7.6" y="5.6" width="8.8" height="5" rx="1" style="fill:#cfe4f2"/><circle cx="8.8" cy="14.4" r="1.3" style="fill:#3a3f4f"/><circle cx="15.2" cy="14.4" r="1.3" style="fill:#3a3f4f"/><path d="M8 18.4 6 21.4M16 18.4l2 3" style="stroke:#3a3f4f;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-pets" viewBox="0 0 24 24"><circle cx="6.6" cy="8.4" r="2.1" style="fill:#d9a066"/><circle cx="11.9" cy="6.2" r="2.1" fill="#b07b4f"/><circle cx="17.2" cy="8.4" r="2.1" style="fill:#d9a066"/><path d="M12 11c-3.9 0-6.4 2.6-6.4 5.4 0 2.6 2.1 4.5 4.4 3.6a4.8 4.8 0 0 1 4 0c2.3.9 4.4-1 4.4-3.6 0-2.8-2.5-5.4-6.4-5.4Z" fill="#b07b4f"/></symbol>
+    <symbol id="cat-childcare" viewBox="0 0 24 24"><circle cx="12" cy="7.2" r="4.4" fill="#e8b48c"/><path d="M4.4 21.4c0-4.2 3.4-7.2 7.6-7.2s7.6 3 7.6 7.2H4.4Z" style="fill:#7cc4ec"/><circle cx="10.4" cy="6.8" r=".95" style="fill:#2b2f3b"/><circle cx="13.6" cy="6.8" r=".95" style="fill:#2b2f3b"/></symbol>
+    <symbol id="cat-charity" viewBox="0 0 24 24"><path d="M12 20.6s-6.2-4-8.4-8c-1.6-3.2 0-6.2 3-6.2 1.8 0 3 .9 4 2.2 1-1.3 2.2-2.2 4-2.2 3 0 4.6 3 3 6.2-2.2 4-8.6 8-8.6 8Z" fill="#e0574f"/><path d="M12 8.6c1-1.3 2.2-2.2 4-2.2 1.7 0 2.9 1 3.2 2.5-1.2-.4-2.5-.2-3.6.8" style="fill:#ef7fa8"/><circle cx="19" cy="4.4" r="1.8" style="fill:#ef7fa8"/></symbol>
+    <symbol id="cat-savings" viewBox="0 0 24 24"><path d="M2.6 12.4A7.4 7.4 0 0 1 10 5h4.2a7.4 7.4 0 0 1 7.2 5.6l1 1v3l-2 .6a7.5 7.5 0 0 1-2.4 2.6v2.6h-3.4v-1.4H10v1.4H6.6v-2.6a7.4 7.4 0 0 1-4-5.4Z" fill="#ef7fa8"/><path d="M8.6 5.6 7 2.6l4.4 1.8" style="fill:#f5a3c0"/><circle cx="16.8" cy="11.4" r="1.2" style="fill:#2b2f3b"/></symbol>
+    <symbol id="cat-investment" viewBox="0 0 24 24"><rect x="3.4" y="13.4" width="4.2" height="7.2" rx="1.4" style="fill:#8ed48f"/><rect x="9.9" y="9.4" width="4.2" height="11.2" rx="1.4" fill="#5ab56a"/><rect x="16.4" y="5" width="4.2" height="15.6" rx="1.4" fill="#5ab56a"/><path d="M4 8.6 9 4.4l3.4 2.8L19 2.6" fill="none" style="stroke:#f2c94c;fill:none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="cat-laundry" viewBox="0 0 24 24"><rect x="3.6" y="2.6" width="16.8" height="18.8" rx="3" fill="#b9bfcc"/><circle cx="12" cy="14" r="5.2" style="fill:#cfe4f2"/><circle cx="12" cy="14" r="2.6" style="fill:#4aa3e0"/><circle cx="7" cy="6" r="1.2" style="fill:#cfe4f2"/><circle cx="10.4" cy="6" r="1.2" style="fill:#cfe4f2"/></symbol>
+    <symbol id="cat-haircut" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3" fill="none" stroke="#c3c9d6" stroke-width="1.9"/><circle cx="18" cy="18" r="3" fill="none" stroke="#c3c9d6" stroke-width="1.9"/><path d="M8.2 15.8 19 3M15.8 15.8 5 3" style="stroke:#9aa3b0;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-hardware" viewBox="0 0 24 24"><path d="M14.4 2.6a5.4 5.4 0 0 0-4.9 7.7L2.8 17a2.2 2.2 0 0 0 3.1 3.1l6.7-6.7a5.4 5.4 0 0 0 6.9-7.2l-3 3-2.6-2.6 3-3a5.4 5.4 0 0 0-2.5-1Z" fill="#ef8c3a"/><circle cx="5" cy="18.2" r="1.2" style="fill:#f4f5f8"/></symbol>
+    <symbol id="cat-garden" viewBox="0 0 24 24"><path d="M12 21.4V10.6" stroke="#5ab56a" stroke-width="1.9" stroke-linecap="round" fill="none"/><path d="M12 12.4C12 8 9 4.6 4.4 3.8 4 8.6 6.8 12 12 12.4Z" fill="#5ab56a"/><path d="M12 14.6c0-3.6 2.6-6.4 6.4-7 .3 4-2 6.8-6.4 7Z" style="fill:#8ed48f"/></symbol>
+    <symbol id="cat-furniture" viewBox="0 0 24 24"><path d="M3.6 11.4V6.6a2 2 0 0 1 2-2h12.8a2 2 0 0 1 2 2v4.8" fill="none" style="stroke:#d9a066;fill:none" stroke-width="1.9" stroke-linejoin="round"/><path d="M2.6 12.4a2 2 0 0 1 2-2h14.8a2 2 0 0 1 2 2v5.2H2.6v-5.2Z" fill="#b07b4f"/><path d="M4.6 17.6v2.8M19.4 17.6v2.8" style="stroke:#d9a066;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-software" viewBox="0 0 24 24"><rect x="2.6" y="4.4" width="18.8" height="13.2" rx="2.6" fill="#7a8092"/><path d="M8.8 9 6.4 11l2.4 2M15.2 9l2.4 2-2.4 2M12.8 8.4l-1.6 5.2" style="stroke:#8ed48f;fill:none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M8.6 20.6h6.8" style="stroke:#9aa3b0;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-gaming" viewBox="0 0 24 24"><path d="M7.4 6.6h9.2a5.4 5.4 0 0 1 5.3 6.4l-.7 3.6a2.8 2.8 0 0 1-5 1.1l-1.5-2H9.3l-1.5 2a2.8 2.8 0 0 1-5-1.1L2.1 13a5.4 5.4 0 0 1 5.3-6.4Z" fill="#838a9c"/><path d="M6 10.4v3.2M4.4 12h3.2" style="stroke:#f4f5f8;fill:none" stroke-width="1.7" stroke-linecap="round" fill="none"/><circle cx="16.4" cy="11" r="1.2" style="fill:#e0574f"/><circle cx="18.8" cy="13.4" r="1.2" style="fill:#e0574f"/></symbol>
+    <symbol id="cat-music" viewBox="0 0 24 24"><path d="M9 18V5.4l10-2v12.2" fill="none" stroke="#9b6fd4" stroke-width="1.9" stroke-linejoin="round"/><ellipse cx="6.4" cy="18" rx="2.8" ry="2.4" style="fill:#b98ae0"/><ellipse cx="16.4" cy="15.6" rx="2.8" ry="2.4" style="fill:#b98ae0"/><path d="M9 9.4l10-2" stroke="#9b6fd4" stroke-width="1.9" fill="none"/></symbol>
+    <symbol id="cat-sports" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2" fill="#f4f5f8"/><path d="M12 2.8v18.4M2.8 12h18.4" style="stroke:#3a3f4f;fill:none" stroke-width="1.5" opacity=".6" fill="none"/><path d="M5.4 5.4c3.6 3.6 3.6 9.6 0 13.2M18.6 5.4c-3.6 3.6-3.6 9.6 0 13.2" style="stroke:#3a3f4f;fill:none" stroke-width="1.5" opacity=".6" fill="none"/><circle cx="12" cy="12" r="2.4" style="fill:#3a3f4f"/></symbol>
+    <symbol id="cat-cafe" viewBox="0 0 24 24"><path d="M3.6 8.4h13.2v6.2a6.6 6.6 0 0 1-13.2 0V8.4Z" fill="#f4f5f8"/><path d="M16.8 9.6h1.8a2.8 2.8 0 0 1 0 5.6h-1.8" fill="none" style="stroke:#8a5a36;fill:none" stroke-width="1.8"/><path d="M7.6 3.4c0 1.2-1.2 1.4-1.2 2.6M11.6 3.4c0 1.2-1.2 1.4-1.2 2.6" style="stroke:#8a5a36;fill:none" stroke-width="1.6" stroke-linecap="round" fill="none"/><path d="M3.6 20.6h14.8" style="stroke:#8a5a36;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="cat-nightlife" viewBox="0 0 24 24"><path d="M3.4 4.4h17.2L12 13.2 3.4 4.4Z" fill="#ef7fa8"/><path d="M12 13.2v7.4M8 21h8" style="stroke:#c3c9d6;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/><path d="M6.4 6.6h11.2L12 12.2 6.4 6.6Z" style="fill:#f5a3c0" opacity=".55"/></symbol>
+    <symbol id="cat-cash" viewBox="0 0 24 24"><rect x="2.4" y="5.6" width="19.2" height="12.8" rx="2.6" fill="#5ab56a"/><circle cx="12" cy="12" r="3.2" style="fill:#f4f5f8"/><circle cx="6" cy="12" r="1.2" style="fill:#8ed48f"/><circle cx="18" cy="12" r="1.2" style="fill:#8ed48f"/></symbol>
+    <symbol id="cat-tax" viewBox="0 0 24 24"><rect x="4.6" y="2.6" width="14.8" height="18.8" rx="2.6" fill="#f4f5f8"/><path d="M8.4 6.6h7.2" style="stroke:#e0574f;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M8.6 11.4 15.4 18M15.4 11.4 8.6 18" style="stroke:#e0574f;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none" opacity=".75"/><circle cx="9.4" cy="12.2" r="1.5" style="fill:#4aa3e0"/><circle cx="14.6" cy="17.2" r="1.5" style="fill:#4aa3e0"/></symbol>
+    <symbol id="cat-gifts" viewBox="0 0 24 24"><rect x="3.6" y="10" width="16.8" height="11.4" rx="2" fill="#e0574f"/><rect x="2.4" y="6.6" width="19.2" height="4.2" rx="1.4" style="fill:#f2c94c"/><rect x="10.6" y="6.6" width="2.8" height="14.8" style="fill:#f7f3ee"/><path d="M12 6.6C10.4 3 5.8 4 5.8 6.6h6.2Zm0 0C13.6 3 18.2 4 18.2 6.6H12Z" style="fill:#f2c94c"/></symbol>
+
+    <!-- =====================================================================
+         PRODUCT QUICK-PICK GLYPHS — flat, two-tone
+         ===================================================================== -->
+    <symbol id="prod-milk" viewBox="0 0 24 24"><path d="M8.4 2.4h7.2l.8 3.2v2.8l1.6 2.8v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9L7.6 8.4V5.6l.8-3.2Z" fill="#f4f5f8"/><rect x="7.6" y="12.4" width="8.8" height="4.4" rx="1" style="fill:#4aa3e0"/></symbol>
+    <symbol id="prod-veg" viewBox="0 0 24 24"><circle cx="8.6" cy="11" r="4.2" fill="#5ab56a"/><circle cx="15.4" cy="11" r="4.2" fill="#5ab56a"/><circle cx="12" cy="8.4" r="4.2" fill="#5ab56a"/><rect x="10.5" y="12.6" width="3" height="8.6" rx="1.4" style="fill:#6b8f3f"/></symbol>
+    <symbol id="prod-fruit" viewBox="0 0 24 24"><path d="M12 8.8c-3.4 0-5.8 2.8-5.8 6.4 0 3.5 2.6 6.8 5 6.8.8 0 1.2-.3 1.8-.3.6 0 1 .3 1.8.3 2.3 0 4.9-3.3 4.9-6.8 0-3.6-2.4-6.4-5.7-6.4-.7 0-1.4.2-2 .5" fill="#e0574f"/><path d="M12 8.8c0-2 1-3.3 2.7-3.8" style="stroke:#5ab56a;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M11.4 5.6c-1.4-1.6-3.4-1.8-4.6-1 .4 1.8 2.4 3 4.6 1Z" style="fill:#5ab56a"/></symbol>
+    <symbol id="prod-meat" viewBox="0 0 24 24"><path d="M14.6 3.8c3.1 0 5.6 2.5 5.6 5.6 0 2-1.1 3.8-2.8 4.7l-5.9 5.9a3.4 3.4 0 0 1-4.8 0l-.6-.6a3.4 3.4 0 0 1 0-4.8l5.9-5.9C12.9 7.4 12 4.8 14.6 3.8Z" fill="#e0736a"/><circle cx="6" cy="18" r="2.4" style="fill:#f4f5f8"/></symbol>
+    <symbol id="prod-chicken" viewBox="0 0 24 24"><path d="M13.6 3.4c3.1 0 5.6 2.5 5.6 5.6 0 2.2-1.3 4.1-3.1 4.9l-6.4 6.4a3.6 3.6 0 0 1-5.1 0l-.3-.3a3.6 3.6 0 0 1 0-5.1l6.6-6.6C9.6 6.4 10.6 3.4 13.6 3.4Z" fill="#d9a066"/><circle cx="5.4" cy="19.6" r="2.1" style="fill:#f4f5f8"/></symbol>
+    <symbol id="prod-fish" viewBox="0 0 24 24"><path d="M2 12c3-4.2 8.2-6.2 13.4-4.2l4.2-3.2-1 5.4 1 5.4-4.2-3.2C10.2 14.2 5 12.2 2 12Z" fill="#6fa8d4"/><circle cx="15.6" cy="10.4" r="1.05" style="fill:#f4f5f8"/><path d="M8.4 9.4c1.2 1.8 1.2 3.4 0 5.2" style="stroke:#f4f5f8;fill:none" stroke-width="1.4" opacity=".6" fill="none"/></symbol>
+    <symbol id="prod-bread" viewBox="0 0 24 24"><path d="M3.6 12.4C3.6 7.6 7.4 3.8 12 3.8s8.4 3.8 8.4 8.6v3.4a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2v-3.4Z" fill="#d9a066"/><path d="M8.4 8.6v5M12 7.6v6M15.6 8.6v5" style="stroke:#b07b4f;fill:none" stroke-width="1.5" stroke-linecap="round" opacity=".6" fill="none"/><path d="M3.6 17.8h16.8" style="stroke:#8a5a36;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="prod-eggs" viewBox="0 0 24 24"><ellipse cx="9" cy="14.6" rx="4.2" ry="5.4" fill="#f4f5f8"/><ellipse cx="16.2" cy="11.6" rx="3.4" ry="4.4" style="fill:#f2c94c"/></symbol>
+    <symbol id="prod-cheese" viewBox="0 0 24 24"><path d="M2.6 9.4 12 4.2l9.4 5.2-2 9.4H4.6l-2-9.4Z" fill="#f2c94c"/><circle cx="9" cy="12.6" r="1.3" style="fill:#f7de8a"/><circle cx="14.2" cy="14.6" r="1.5" style="fill:#f7de8a"/><circle cx="11" cy="16.4" r="1" style="fill:#f7de8a"/></symbol>
+    <symbol id="prod-butter" viewBox="0 0 24 24"><path d="M3.6 9.4 6 5.2h12l2.4 4.2H3.6Z" style="fill:#f4f5f8"/><rect x="3.6" y="9.4" width="16.8" height="9" rx="1.6" fill="#f2c94c"/></symbol>
+    <symbol id="prod-rice" viewBox="0 0 24 24"><path d="M3.6 12.4h16.8a8.4 6.8 0 0 1-16.8 0Z" fill="#4a86c4"/><path d="M12 3.6v5.2M8.8 5.2v3.6M15.2 5.2v3.6" style="stroke:#cfe4f2;fill:none" stroke-width="1.7" stroke-linecap="round" fill="none"/><path d="M2.6 20.4h18.8" style="stroke:#cfe4f2;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="prod-pasta" viewBox="0 0 24 24"><path d="M3.6 12.4h16.8a8.4 6.8 0 0 1-16.8 0Z" fill="#f2c94c"/><path d="M8 4.6c1.2 1.2 0 2.4 1.2 3.6s2.4-1.2 3.6 0-1.2 2.4 0 3.6" fill="none" style="stroke:#e2703a;fill:none" stroke-width="1.7" stroke-linecap="round"/></symbol>
+    <symbol id="prod-cereal" viewBox="0 0 24 24"><path d="M6.6 2.6h10.8l1 4.4-1 14.4H6.6l-1-14.4 1-4.4Z" fill="#e2703a"/><rect x="8.6" y="8.6" width="6.8" height="5.6" rx="1" style="fill:#f7de8a"/><circle cx="10.2" cy="11.4" r=".9" style="fill:#f4f5f8"/><circle cx="13.4" cy="11.4" r=".9" style="fill:#f4f5f8"/></symbol>
+    <symbol id="prod-spices" viewBox="0 0 24 24"><rect x="8.4" y="2.6" width="7.2" height="3.4" rx="1" style="fill:#c3c9d6"/><path d="M7.4 6h9.2v13.2a2.2 2.2 0 0 1-2.2 2.2H9.6a2.2 2.2 0 0 1-2.2-2.2V6Z" fill="#8a5a36"/><circle cx="10.2" cy="11.6" r="1.1" style="fill:#ef8c3a"/><circle cx="13.8" cy="12.6" r="1.1" style="fill:#ef8c3a"/><circle cx="11.4" cy="15.6" r="1.1" style="fill:#ef8c3a"/></symbol>
+    <symbol id="prod-snacks" viewBox="0 0 24 24"><path d="M5.6 7.6h12.8l-1.4 12.2a2 2 0 0 1-2 1.8H9a2 2 0 0 1-2-1.8L5.6 7.6Z" fill="#ef8c3a"/><path d="M8.6 7.6 7.6 3.6h8.8l-1 4" fill="none" style="stroke:#e2703a;fill:none" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+    <symbol id="prod-drinks" viewBox="0 0 24 24"><path d="M6.6 8.6h10.8l-1.1 11.2a2 2 0 0 1-2 1.6h-4.6a2 2 0 0 1-2-1.6L6.6 8.6Z" fill="#4aa3e0"/><path d="M8.6 8.6 7.8 5.4h8.4l-.8 3.2" fill="none" style="stroke:#7cc4ec;fill:none" stroke-width="1.7" stroke-linejoin="round"/><path d="M7.4 13.4h9.2" style="stroke:#cfe4f2;fill:none" stroke-width="1.6" opacity=".6" fill="none"/></symbol>
+    <symbol id="prod-coffee" viewBox="0 0 24 24"><path d="M3.6 8.4h13.2v6.2a6.6 6.6 0 0 1-13.2 0V8.4Z" fill="#f4f5f8"/><path d="M16.8 9.6h1.8a2.8 2.8 0 0 1 0 5.6h-1.8" fill="none" style="stroke:#8a5a36;fill:none" stroke-width="1.8"/><path d="M7.6 3.4c0 1.2-1.2 1.4-1.2 2.6M11.6 3.4c0 1.2-1.2 1.4-1.2 2.6" style="stroke:#8a5a36;fill:none" stroke-width="1.6" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="prod-tea" viewBox="0 0 24 24"><path d="M3.6 9h13.2v5.8a6.6 6.6 0 0 1-13.2 0V9Z" fill="#f4f5f8"/><path d="M16.8 10.2h1.8a2.8 2.8 0 0 1 0 5.6h-1.8" fill="none" style="stroke:#5ab56a;fill:none" stroke-width="1.8"/><rect x="8.8" y="2.4" width="3.2" height="4" rx=".8" style="fill:#5ab56a"/><path d="M10.4 6.4V9" style="stroke:#5ab56a;fill:none" stroke-width="1.4" fill="none"/></symbol>
+    <symbol id="prod-frozen" viewBox="0 0 24 24"><path d="M12 2.4v19.2" stroke="#7cc4ec" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M3.7 7.2 20.3 16.8M20.3 7.2 3.7 16.8" style="stroke:#cfe4f2;fill:none" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M9 4.4 12 7.4l3-3M9 19.6l3-3 3 3" fill="none" stroke="#7cc4ec" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="prod-canned" viewBox="0 0 24 24"><rect x="5.6" y="5" width="12.8" height="15.4" rx="1.6" fill="#b9bfcc"/><ellipse cx="12" cy="5" rx="6.4" ry="2" style="fill:#dfe3ec"/><rect x="7.4" y="10" width="9.2" height="4.4" rx="1" style="fill:#e0574f"/></symbol>
+    <symbol id="prod-cleaning" viewBox="0 0 24 24"><path d="M9.6 2.4h3.2v3.2l2.4 1.4v12.6a2 2 0 0 1-2 2H8.4a2 2 0 0 1-2-2V7l3.2-1.4V2.4Z" fill="#7cc4ec"/><path d="M13.4 4.6h3.4l2.4 2.4" style="stroke:#4aa3e0;fill:none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><rect x="8" y="10.4" width="6" height="3.4" rx=".8" style="fill:#f4f5f8"/></symbol>
+    <symbol id="prod-toiletries" viewBox="0 0 24 24"><path d="M9.8 2.4h4.4v2.6l1.8 1.4v13.8a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V6.4l1.8-1.4V2.4Z" fill="#ef7fa8"/><rect x="9.4" y="9" width="5.2" height="3.4" rx=".8" style="fill:#f4f5f8"/><path d="M9.8 2.4h4.4" style="stroke:#f5a3c0;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="prod-fastfood" viewBox="0 0 24 24"><path d="M4.4 9.4c1.1-3.2 4-5.2 7.6-5.2s6.5 2 7.6 5.2H4.4Z" fill="#d9a066"/><rect x="3.4" y="10.4" width="17.2" height="2.4" rx="1.2" style="fill:#8a5a36"/><path d="M3.6 14.2h16.8v1.2a4 4 0 0 1-4 4H7.6a4 4 0 0 1-4-4v-1.2Z" fill="#d9a066"/><circle cx="9" cy="7.4" r=".9" style="fill:#f7de8a"/><circle cx="13.4" cy="6.8" r=".9" style="fill:#f7de8a"/></symbol>
+    <symbol id="prod-clothing" viewBox="0 0 24 24"><path d="M8.4 2.8 3.6 6.2l2.2 3.4 2.2-1.2v11.4a1.2 1.2 0 0 0 1.2 1.2h5.6a1.2 1.2 0 0 0 1.2-1.2V8.4l2.2 1.2 2.2-3.4-4.8-3.4-2.2 2.2h-3.2L8.4 2.8Z" fill="#4aa3e0"/><path d="M9.6 2.8h4.8a2.4 2.4 0 0 1-4.8 0Z" style="fill:#3d7fb8"/></symbol>
+    <symbol id="prod-electronics" viewBox="0 0 24 24"><rect x="3.4" y="4.6" width="17.2" height="11.6" rx="2.2" fill="#7a8092"/><rect x="5.6" y="6.8" width="12.8" height="7.2" rx="1" style="fill:#7cc4ec"/><path d="M8.6 19.8h6.8" style="stroke:#9aa3b0;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/><path d="M12 16.2v3.6" style="stroke:#9aa3b0;fill:none" stroke-width="1.9" fill="none"/></symbol>
+    <symbol id="prod-gifts" viewBox="0 0 24 24"><rect x="3.6" y="10" width="16.8" height="11.4" rx="2" fill="#e0574f"/><rect x="2.4" y="6.6" width="19.2" height="4.2" rx="1.4" style="fill:#f2c94c"/><rect x="10.6" y="6.6" width="2.8" height="14.8" style="fill:#f7f3ee"/><path d="M12 6.6C10.4 3 5.8 4 5.8 6.6h6.2Zm0 0C13.6 3 18.2 4 18.2 6.6H12Z" style="fill:#f2c94c"/></symbol>
+    <symbol id="prod-yogurt" viewBox="0 0 24 24"><path d="M6.4 8h11.2l-1.2 11.6a2 2 0 0 1-2 1.8H9.6a2 2 0 0 1-2-1.8L6.4 8Z" fill="#f4f5f8"/><path d="M5.6 5.4h12.8a1 1 0 0 1 1 1V8H4.6V6.4a1 1 0 0 1 1-1Z" style="fill:#ef7fa8"/><path d="M9.6 11.6h4.8" style="stroke:#c3c9d6;fill:none" stroke-width="1.6" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="prod-honey" viewBox="0 0 24 24"><path d="M7.4 7.6h9.2v10.8a3 3 0 0 1-3 3h-3.2a3 3 0 0 1-3-3V7.6Z" fill="#f2c94c"/><rect x="6.4" y="4.6" width="11.2" height="3" rx="1" style="fill:#d9a066"/><path d="M12 10.4l1.6 1v2l-1.6 1-1.6-1v-2l1.6-1Z" style="fill:#e8b73f"/></symbol>
+    <symbol id="prod-oil" viewBox="0 0 24 24"><path d="M9 8.6h6l1.6 3v8.2a1.6 1.6 0 0 1-1.6 1.6H9a1.6 1.6 0 0 1-1.6-1.6v-8.2L9 8.6Z" fill="#b5c94a"/><rect x="10.2" y="2.6" width="3.6" height="6" rx="1" style="fill:#5ab56a"/><rect x="8.8" y="13.4" width="6.4" height="4" rx="1" style="fill:#f7de8a"/></symbol>
+    <symbol id="prod-sauce" viewBox="0 0 24 24"><path d="M8.6 8h6.8l1.4 3.4v8.4a1.8 1.8 0 0 1-1.8 1.8H9a1.8 1.8 0 0 1-1.8-1.8v-8.4L8.6 8Z" fill="#e0574f"/><path d="M10.6 2.6h2.8v5.4h-2.8z" style="fill:#b9bfcc"/><path d="M9.4 13.4h5.2v3.4H9.4z" style="fill:#f4f5f8"/></symbol>
+    <symbol id="prod-sugar" viewBox="0 0 24 24"><path d="M4.6 8.6h14.8l-1 11a2 2 0 0 1-2 1.8H7.6a2 2 0 0 1-2-1.8l-1-11Z" fill="#f4f5f8"/><path d="M4.6 8.6 6 4.6h12l1.4 4H4.6Z" style="fill:#7cc4ec"/><rect x="9" y="12" width="2.6" height="2.6" rx=".6" style="fill:#e6e8ef"/><rect x="12.6" y="15" width="2.6" height="2.6" rx=".6" style="fill:#e6e8ef"/></symbol>
+    <symbol id="prod-flour" viewBox="0 0 24 24"><path d="M6 6.6h12l1.4 12.8a2 2 0 0 1-2 2.2H6.6a2 2 0 0 1-2-2.2L6 6.6Z" fill="#f4f5f8"/><path d="M6.6 3.4h10.8l.6 3.2H6L6.6 3.4Z" style="fill:#d9a066"/><rect x="8.4" y="11" width="7.2" height="4.4" rx="1" style="fill:#e6e8ef"/></symbol>
+    <symbol id="prod-nuts" viewBox="0 0 24 24"><path d="M8 3.6c2.6 0 4.4 2.6 4.4 6 0 4-2.2 7.4-4.4 7.4S3.6 13.6 3.6 9.6c0-3.4 1.8-6 4.4-6Z" fill="#b07b4f"/><path d="M16.4 8c2.4 0 4 2.4 4 5.4 0 3.6-2 6.6-4 6.6s-4-3-4-6.6c0-3 1.6-5.4 4-5.4Z" style="fill:#d9a066"/></symbol>
+    <symbol id="prod-chocolate" viewBox="0 0 24 24"><rect x="4.6" y="4.6" width="14.8" height="14.8" rx="2" fill="#8a5a36"/><path d="M12 4.6v14.8M4.6 12h14.8" style="stroke:#5c3a20;fill:none" stroke-width="1.5" opacity=".7" fill="none"/><path d="M8.3 4.6v14.8M15.7 4.6v14.8" style="stroke:#5c3a20;fill:none" stroke-width="1.2" opacity=".4" fill="none"/><path d="M19.4 4.6 16 8" style="stroke:#f4f5f8;fill:none" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="prod-icecream" viewBox="0 0 24 24"><path d="M7 10.4a5 5 0 0 1 10 0v.6H7v-.6Z" fill="#f7de8a"/><circle cx="9.2" cy="8.4" r="3" style="fill:#ef7fa8"/><circle cx="14.8" cy="8.4" r="3" style="fill:#ef7fa8"/><path d="M7.4 12.2h9.2L12 21.6 7.4 12.2Z" fill="#f7de8a"/></symbol>
+    <symbol id="prod-juice" viewBox="0 0 24 24"><path d="M7.4 7.6h9.2v12a1.8 1.8 0 0 1-1.8 1.8H9.2a1.8 1.8 0 0 1-1.8-1.8v-12Z" fill="#ef8c3a"/><path d="M7.4 7.6 8.6 4h6.8l1.2 3.6H7.4Z" style="fill:#e2703a"/><path d="M14.4 2.4 12.6 5.6" style="stroke:#e2703a;fill:none" stroke-width="1.8" stroke-linecap="round" fill="none"/><rect x="9" y="11" width="6" height="4" rx="1" style="fill:#f7de8a"/></symbol>
+    <symbol id="prod-water" viewBox="0 0 24 24"><path d="M8 8h8v11.6a1.8 1.8 0 0 1-1.8 1.8H9.8A1.8 1.8 0 0 1 8 19.6V8Z" fill="#7cc4ec"/><rect x="9.6" y="2.4" width="4.8" height="2.6" rx="1" style="fill:#4aa3e0"/><path d="M9.6 5h4.8L16 8H8l1.6-3Z" style="fill:#4aa3e0"/><rect x="9.2" y="11.6" width="5.6" height="4" rx="1" style="fill:#cfe4f2"/></symbol>
+    <symbol id="prod-babyfood" viewBox="0 0 24 24"><path d="M7.6 9h8.8v10.4a2 2 0 0 1-2 2H9.6a2 2 0 0 1-2-2V9Z" fill="#8ed48f"/><path d="M9 9V6.4a3 3 0 0 1 6 0V9" fill="none" style="stroke:#ef7fa8;fill:none" stroke-width="1.8"/><path d="M10.4 2.6c.8.8 2.4.8 3.2 0" style="stroke:#ef7fa8;fill:none" stroke-width="1.7" stroke-linecap="round" fill="none"/><rect x="9.2" y="12.4" width="5.6" height="3.6" rx="1" style="fill:#f4f5f8"/></symbol>
+    <symbol id="prod-petfood" viewBox="0 0 24 24"><path d="M3.6 12.6h16.8v4.8a4 4 0 0 1-4 4H7.6a4 4 0 0 1-4-4v-4.8Z" fill="#4a86c4"/><circle cx="7.4" cy="7" r="2.1" style="fill:#b07b4f"/><circle cx="12" cy="5.4" r="2.1" style="fill:#b07b4f"/><circle cx="16.6" cy="7" r="2.1" style="fill:#b07b4f"/><path d="M3.6 12.6h16.8" style="stroke:#3d7fb8;fill:none" stroke-width="1.6" opacity=".7" fill="none"/></symbol>
+    <symbol id="prod-paper" viewBox="0 0 24 24"><rect x="6" y="4.6" width="12" height="14.8" rx="2" fill="#f4f5f8"/><rect x="8.6" y="8" width="6.8" height="8" rx="1" style="fill:#e6e8ef"/><path d="M4.6 7.4v9.2M19.4 7.4v9.2" style="stroke:#b9bfcc;fill:none" stroke-width="1.9" stroke-linecap="round" fill="none"/></symbol>
+
+  </defs>
+</svg>
+
+<!-- ============================= SPLASH SCREEN ============================= -->
+<div id="splash" class="splash">
+  <div class="splash-logo"><svg><use href="#icon-logo"/></svg></div>
+  <div class="splash-title">Finledge</div>
+  <div class="spinner" aria-label="Loading"></div>
+</div>
+
+<!-- ============================= AUTH SCREEN ============================= -->
+<div id="auth-screen" class="auth-screen hidden">
+  <div class="auth-header">
+    <div class="auth-logo"><svg><use href="#icon-logo"/></svg></div>
+    <h1>Finledge</h1>
+    <p class="auth-sub">Shared spending, settled fairly.</p>
+  </div>
+
+  <div class="auth-welcome" id="auth-welcome">
+    <button type="button" class="btn-auth-choice" id="choice-join">
+      <span class="auth-choice-icon"><svg class="icon-sm"><use href="#icon-switch"/></svg></span>
+      <span class="auth-choice-text"><strong>Join a room</strong><small>Use a Room ID you were given</small></span>
+      <svg class="icon-sm auth-choice-chevron"><use href="#icon-chevron"/></svg>
+    </button>
+    <button type="button" class="btn-auth-choice" id="choice-create">
+      <span class="auth-choice-icon"><svg class="icon-sm"><use href="#icon-plus"/></svg></span>
+      <span class="auth-choice-text"><strong>Create a room</strong><small>Start a new shared space</small></span>
+      <svg class="icon-sm auth-choice-chevron"><use href="#icon-chevron"/></svg>
+    </button>
+  </div>
+
+  <form id="form-join" class="auth-form panel hidden">
+    <button type="button" class="auth-back-btn" data-back><svg class="icon-sm date-chevron-prev"><use href="#icon-chevron"/></svg> Back</button>
+    <h2 class="auth-form-title">Join a room</h2>
+    <label>Room ID
+      <input type="text" id="join-roomId" placeholder="FIN-9042" autocomplete="off" required />
+    </label>
+    <label>Room password
+      <input type="password" id="join-roomPassword" placeholder="Room password" required />
+    </label>
+    <label>Your name
+      <input type="text" id="join-memberName" placeholder="e.g. Sam" required />
+    </label>
+    <label>4-digit PIN
+      <input type="password" inputmode="numeric" maxlength="4" pattern="\d{4}" id="join-memberPin" placeholder="••••" required />
+    </label>
+    <input type="hidden" id="join-avatar" />
+    <label class="checkbox-row"><input type="checkbox" id="join-remember" checked /> Remember this device</label>
+    <button type="submit" class="btn-primary">Join room</button>
+    <p class="form-error" id="join-error"></p>
+  </form>
+
+  <form id="form-create" class="auth-form panel hidden">
+    <button type="button" class="auth-back-btn" data-back><svg class="icon-sm date-chevron-prev"><use href="#icon-chevron"/></svg> Back</button>
+    <h2 class="auth-form-title">Create a room</h2>
+    <label>Room name
+      <input type="text" id="create-roomName" placeholder="e.g. 12B Roommates" required />
+    </label>
+    <label>Room password
+      <input type="password" id="create-roomPassword" placeholder="Choose a room password" required />
+    </label>
+    <label>Host name
+      <input type="text" id="create-hostName" placeholder="Your name" required />
+    </label>
+    <label>4-digit PIN
+      <input type="password" inputmode="numeric" maxlength="4" pattern="\d{4}" id="create-hostPin" placeholder="••••" required />
+    </label>
+    <input type="hidden" id="create-avatar" />
+    <label class="checkbox-row"><input type="checkbox" id="create-remember" checked /> Remember this device</label>
+    <button type="submit" class="btn-primary">Create room</button>
+    <p class="form-error" id="create-error"></p>
+  </form>
+</div>
+
+<!-- ============================= APP SHELL ============================= -->
+<div id="app" class="app hidden">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-id">
+        <div class="topbar-title" id="topbar-title">Home</div>
+        <div class="topbar-room" id="topbar-room"></div>
+      </div>
+      <div class="topbar-right">
+        <!-- Which month everything below is scoped to. The switcher itself
+             lives in Profile; this is the standing reminder, so a month you
+             stepped back to can never quietly stay put. -->
+        <button type="button" class="topbar-month hidden" id="topbar-month" aria-label="Change the month you are viewing">
+          <span class="topbar-month-name" id="topbar-month-name">—</span>
+          <span class="topbar-month-tag" id="topbar-month-tag"></span>
+        </button>
+        <div class="topbar-mark"><svg><use href="#icon-logo"/></svg></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="views">
+
+    <!-- HOME / TRANSACTIONS -->
+    <section id="view-home" class="view active">
+      <div class="hero panel">
+        <div class="hero-label" id="hero-month-label">This month</div>
+        <div class="hero-figure">
+          <span class="hero-value" id="summary-month-total">£0.00</span>
+          <span id="home-delta"></span>
+        </div>
+        <div class="hero-spark" id="home-spark"></div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-label">Your balance</div>
+            <div class="hero-stat-value" id="summary-balance">—</div>
+            <div class="hero-stat-sub" id="summary-balance-sublabel"></div>
+          </div>
+          <!-- Who is sharing the bill this month. This replaced the
+               transaction count, which was already printed under the list
+               below; the number of people sharing is the one that moves the
+               daily average and everybody's balance. -->
+          <div class="hero-stat">
+            <div class="hero-stat-label">Sharing</div>
+            <div class="hero-stat-value" id="home-sharing">—</div>
+            <div class="hero-stat-sub hero-sharing-faces" id="home-sharing-faces"></div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-label">Daily average</div>
+            <div class="hero-stat-value" id="home-avgday">£0.00</div>
+            <div class="hero-stat-sub" id="home-avgday-sub">so far</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg class="icon-sm"><use href="#icon-search"/></svg>
+          <input type="text" id="search-input" placeholder="Search transactions" />
+        </div>
+        <button class="icon-btn" id="filter-toggle-btn" aria-label="Filter"><svg class="icon-sm"><use href="#icon-sliders"/></svg></button>
+      </div>
+
+      <div class="filter-panel panel hidden" id="filter-panel">
+        <label>Who spent
+          <select id="filter-member"><option value="">Everyone</option></select>
+        </label>
+        <label>Category
+          <select id="filter-category"><option value="">All categories</option></select>
+        </label>
+        <button class="btn-ghost" id="filter-clear-btn">Clear filters</button>
+      </div>
+
+      <!-- Home is the live month and only the live month. Anything older is
+           history, and history has one home: the Activity tab. -->
+      <div class="section-head">
+        <h3 class="section-title">Recent transactions</h3>
+        <span class="section-note" id="tx-section-note"></span>
+      </div>
+      <div class="tx-list" id="tx-list"></div>
+      <div class="empty-state hidden" id="tx-empty">
+        <svg class="icon-lg"><use href="#icon-receipt"/></svg>
+        <p id="tx-empty-text">No transactions yet. Tap + to add one.</p>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section id="view-analytics" class="view">
+      <div class="stat-strip">
+        <div class="stat-tile panel">
+          <div class="stat-label" id="an-total-label">This month</div>
+          <div class="stat-value" id="an-total">£0.00</div>
+          <div class="stat-sub" id="an-delta"></div>
+        </div>
+        <div class="stat-tile panel">
+          <div class="stat-label">Daily average</div>
+          <div class="stat-value" id="an-avg">£0.00</div>
+          <div class="stat-sub" id="an-avg-sub">—</div>
+        </div>
+        <div class="stat-tile panel">
+          <div class="stat-label">Transactions</div>
+          <div class="stat-value" id="an-count">0</div>
+          <div class="stat-sub" id="an-count-sub">—</div>
+        </div>
+        <div class="stat-tile panel">
+          <div class="stat-label">Largest single</div>
+          <div class="stat-value" id="an-max">£0.00</div>
+          <div class="stat-sub" id="an-max-sub">—</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 class="panel-title">Spending trend</h3>
+          <span class="panel-note">Last 6 months</span>
+        </div>
+        <div id="monthly-trend" class="chart-wrap"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 class="panel-title" id="daily-panel-title">This month, day by day</h3>
+          <span class="panel-note" id="daily-note"></span>
+        </div>
+        <div id="daily-chart" class="chart-wrap"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 class="panel-title">By category</h3>
+          <span class="panel-note" id="category-month-note"></span>
+        </div>
+        <div id="category-bars" class="rank-list"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 class="panel-title">By member</h3>
+          <span class="panel-note" id="top-spender-note"></span>
+        </div>
+        <div id="member-bars" class="rank-list"></div>
+      </div>
+
+      <div class="panel" id="places-panel">
+        <div class="panel-head">
+          <h3 class="panel-title">Where it goes</h3>
+          <span class="panel-note">Top places</span>
+        </div>
+        <div id="top-places" class="rank-list"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 class="panel-title">Settle up</h3>
+          <span class="panel-note" id="settle-month-note"></span>
+        </div>
+        <p class="panel-hint" id="settle-hint">Splits the month's spending evenly and works out who owes who.</p>
+        <!-- Shown only when somebody paused or resumed mid-month, so the split
+             is not one even division. Tap it to see each stretch on its own. -->
+        <button type="button" class="seg-notice hidden" id="seg-notice" aria-expanded="false">
+          <svg class="icon-sm"><use href="#icon-users"/></svg>
+          <span class="seg-notice-text" id="seg-notice-text"></span>
+          <svg class="icon-sm seg-notice-chevron"><use href="#icon-chevron"/></svg>
+        </button>
+        <div class="seg-breakdown hidden" id="seg-breakdown"></div>
+        <div id="settle-balances" class="settle-balances"></div>
+        <div id="settle-list" class="settle-list"></div>
+        <!-- Whether the room has agreed these payments were actually made.
+             A record of what people say happened — it never moves a figure. -->
+        <div id="settle-status" class="settle-status"></div>
+      </div>
+    </section>
+
+    <!-- ACTIVITY — the room's history, and the only place a month is chosen.
+         "Previous" opens the full list; the two chips are the months people
+         actually reach for, so the common case is one tap and no dialog. -->
+    <!-- HISTORY — every closed month, and only closed-month reading. -->
+    <section id="view-history" class="view">
+      <div class="month-bar" id="month-bar">
+        <button type="button" class="month-bar-prev" id="month-picker-btn" aria-haspopup="dialog">
+          <svg class="icon-sm date-chevron-prev"><use href="#icon-chevron"/></svg>
+          <span>Previous</span>
+        </button>
+        <div class="month-bar-chips" id="month-bar-chips"></div>
+      </div>
+
+      <div class="month-summary" id="month-summary">
+        <div class="month-summary-main">
+          <span class="month-summary-label" id="month-summary-label">This month</span>
+          <span class="month-summary-total" id="month-summary-total">£0.00</span>
+        </div>
+        <span class="month-summary-count" id="month-summary-count"></span>
+      </div>
+
+      <div class="section-head">
+        <h3 class="section-title" id="history-tx-title">Transactions</h3>
+        <span class="section-note" id="history-tx-note"></span>
+      </div>
+      <div class="tx-list" id="history-tx-list"></div>
+      <div class="empty-state hidden" id="history-tx-empty">
+        <svg class="icon-lg"><use href="#icon-receipt"/></svg>
+        <p id="history-tx-empty-text">Nothing was recorded in this month.</p>
+      </div>
+    </section>
+
+    <!-- ACTIVITY — the log, on the ground, exactly as it was before. -->
+    <section id="view-activity" class="view">
+      <div class="activity-list" id="activity-list"></div>
+      <div class="empty-state hidden" id="activity-empty">
+        <svg class="icon-lg"><use href="#icon-activity"/></svg>
+        <p id="activity-empty-text">No activity yet.</p>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="view-profile" class="view">
+      <div class="panel profile-hero">
+        <button type="button" class="profile-avatar-xl-btn" id="profile-avatar-edit-btn">
+          <div class="profile-avatar-xl" id="profile-avatar-xl"></div>
+          <span class="profile-avatar-edit-badge"><svg><use href="#icon-pencil-badge"/></svg></span>
+        </button>
+        <div class="profile-hero-name" id="profile-hero-name">—</div>
+        <div class="profile-hero-role" id="profile-hero-role"></div>
+        <div class="profile-hero-hint">Tap your avatar to change it</div>
+      </div>
+
+      <div class="panel">
+        <h3 class="panel-title">Personal info</h3>
+        <div class="info-row">
+          <span>Name</span>
+          <span class="reveal-row">
+            <strong id="profile-name">—</strong>
+            <button class="icon-btn-sm" id="profile-name-edit" aria-label="Change your name"><svg class="icon-sm"><use href="#icon-edit"/></svg></button>
+          </span>
+        </div>
+        <div class="info-row">
+          <span>PIN</span>
+          <span class="reveal-row">
+            <strong id="profile-pin">••••</strong>
+            <button class="icon-btn-sm" id="profile-pin-toggle" aria-label="Reveal PIN"><svg class="icon-sm"><use href="#icon-eye"/></svg></button>
+          </span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 class="panel-title">Room info</h3>
+        <div class="info-row"><span>Room name</span><strong id="profile-room-name">—</strong></div>
+        <div class="info-row">
+          <span>Room ID</span>
+          <span class="reveal-row"><strong id="profile-room-id">—</strong>
+            <button class="icon-btn-sm" data-copy="room-id" aria-label="Copy Room ID"><svg class="icon-sm"><use href="#icon-copy"/></svg></button>
+          </span>
+        </div>
+        <div class="info-row">
+          <span>Room password</span>
+          <span class="reveal-row">
+            <strong id="profile-room-password">Ask your host</strong>
+          </span>
+        </div>
+        <div class="info-row"><span>Members</span><strong id="profile-member-count">—</strong></div>
+        <div class="info-row"><span>Created</span><strong id="profile-created">—</strong></div>
+        <div class="info-row"><span>Lifetime spend</span><strong id="profile-lifetime">£0.00</strong></div>
+      </div>
+
+      <div class="panel">
+        <h3 class="panel-title">Room members</h3>
+        <div class="member-list" id="profile-member-list"></div>
+      </div>
+
+      <!-- Monthly sharing: Home shows who is sharing, this is where it is
+           decided. A member asks; the host approves. -->
+      <div class="panel" id="sharing-card">
+        <div class="panel-head">
+          <h3 class="panel-title">Monthly sharing</h3>
+          <span class="panel-note" id="sharing-note"></span>
+        </div>
+        <p class="panel-hint">Pausing keeps you in the room and keeps your history — you just stop sharing the bill, and stop adding spending, from the day it starts.</p>
+        <div class="sharing-requests" id="sharing-requests"></div>
+        <div class="sharing-people" id="sharing-people"></div>
+        <button class="btn-secondary" id="sharing-change-btn"><svg class="icon-sm"><use href="#icon-users"/></svg> <span id="sharing-change-label">Request a change</span></button>
+      </div>
+
+      <div class="panel hidden" id="host-tools-card">
+        <h3 class="panel-title">Host tools</h3>
+        <p class="panel-hint">Customize the categories everyone in this room can pick from.</p>
+        <button class="btn-secondary" id="manage-categories-btn"><svg class="icon-sm"><use href="#icon-tag"/></svg> Manage categories</button>
+        <button class="btn-secondary" id="handover-host-btn"><svg class="icon-sm"><use href="#icon-switch"/></svg> Hand over host</button>
+      </div>
+
+      <div class="profile-actions">
+        <button class="btn-secondary" id="replay-tour-btn"><svg class="icon-sm"><use href="#icon-help"/></svg> Take the app tour</button>
+        <button class="btn-quiet-danger" id="leave-room-btn"><svg class="icon-sm"><use href="#icon-logout"/></svg> Leave / change room</button>
+      </div>
+    </section>
+
+  </main>
+
+  <button class="fab" id="fab-add" aria-label="Add expense"><svg><use href="#icon-plus"/></svg></button>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-view="home"><svg><use href="#icon-home"/></svg><span>Home</span></button>
+    <button class="nav-btn" data-view="analytics"><svg><use href="#icon-chart"/></svg><span>Analytics</span><i class="nav-dot hidden" id="nav-analytics-dot"></i></button>
+    <button class="nav-btn" data-view="history"><svg><use href="#icon-clock"/></svg><span>History</span></button>
+    <button class="nav-btn" data-view="activity"><svg><use href="#icon-activity"/></svg><span>Activity</span></button>
+    <button class="nav-btn" data-view="profile"><svg><use href="#icon-profile"/></svg><span>Profile</span></button>
+  </nav>
+</div>
+
+<!-- ============================= EXPENSE MODAL ============================= -->
+<div id="expense-modal" class="modal-overlay hidden">
+  <div class="modal sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="expense-modal-title">Add expense</h2>
+      <button class="icon-btn" id="expense-modal-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <form id="expense-form">
+      <!-- Names the month this entry will actually land in whenever that
+           isn't the current one. The date below decides it, not the month
+           you happen to be viewing. -->
+      <p class="form-notice hidden" id="expense-month-notice"></p>
+      <label>Amount (£)
+        <input type="number" id="expense-amount" step="0.01" min="0.01" placeholder="0.00" required inputmode="decimal" />
+      </label>
+
+      <div class="category-grid" id="expense-category-grid"></div>
+
+      <div class="product-picker hidden" id="expense-product-picker">
+        <div class="group-title" id="expense-product-title">Quick pick</div>
+        <div class="product-grid" id="expense-product-grid"></div>
+      </div>
+
+      <label>Item description
+        <input type="text" id="expense-description" placeholder="e.g. Milk, Vegetables" required />
+      </label>
+      <label>Where did you buy this? <span class="label-optional">(optional)</span>
+        <input type="text" id="expense-location" placeholder="e.g. Tesco, Amazon" maxlength="120" />
+      </label>
+      <label>Date
+        <button type="button" class="date-field" id="expense-date-btn">
+          <svg class="icon-sm"><use href="#icon-calendar"/></svg>
+          <span id="expense-date-label">Select date</span>
+        </button>
+      </label>
+      <!-- States the window before someone picks a date they cannot use. -->
+      <p class="field-hint" id="expense-date-hint"></p>
+      <input type="hidden" id="expense-id" />
+      <input type="hidden" id="expense-category" required />
+      <input type="hidden" id="expense-date" required />
+      <button type="submit" class="btn-primary">Save expense</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================= TRANSACTION DETAIL ============================= -->
+<!-- The card is a summary and says so by being tappable. Anything the card had
+     to clip or leave out — the full description, the place, the exact date — is
+     here. It reads only: edit and delete moved onto the swipe in History, which
+     is also why the card has room for two full lines of description. -->
+<div id="tx-detail-modal" class="modal-overlay hidden">
+  <div class="modal sheet" role="dialog" aria-modal="true" aria-labelledby="tx-detail-title">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="tx-detail-title">Transaction</h2>
+      <button class="icon-btn" id="tx-detail-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <div class="txd-head" id="tx-detail-head"></div>
+    <dl class="txd-facts" id="tx-detail-facts"></dl>
+    <div class="txd-actions" id="tx-detail-actions"></div>
+  </div>
+</div>
+
+<!-- ============================= MONTHLY SHARING ============================= -->
+<!-- Asking to pause or resume. A member's ask goes to the host; the host's own
+     choices apply straight away, which is why the submit button is labelled
+     from state rather than hardcoded. -->
+<div id="sharing-modal" class="modal-overlay hidden">
+  <div class="modal sheet" role="dialog" aria-modal="true" aria-labelledby="sharing-modal-title">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="sharing-modal-title">Monthly sharing</h2>
+      <button class="icon-btn" id="sharing-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <form id="sharing-form">
+      <label class="field" id="sharing-who-field">Who
+        <select id="sharing-who"></select>
+      </label>
+      <label class="field">What
+        <select id="sharing-what">
+          <option value="out">Pause — stop sharing the bill</option>
+          <option value="in">Resume — start sharing again</option>
+        </select>
+      </label>
+      <label class="field">Starting from
+        <input type="date" id="sharing-from" required />
+      </label>
+      <p class="field-hint" id="sharing-hint"></p>
+      <button type="submit" class="btn-primary" id="sharing-submit">Send request</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================= HAND OVER HOST ============================= -->
+<div id="handover-modal" class="modal-overlay hidden">
+  <div class="modal sheet" role="dialog" aria-modal="true" aria-labelledby="handover-title">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="handover-title">Hand over host</h2>
+      <button class="icon-btn" id="handover-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <p class="panel-hint">The person you choose becomes the host. You keep your spending and your history, but you lose the host tools — only the new host can hand it back.</p>
+    <div class="handover-list" id="handover-list"></div>
+  </div>
+</div>
+
+<!-- ============================= CHANGE NAME ============================= -->
+<!-- Your name is also how you sign in, so this says so plainly rather than
+     letting someone discover it at the next login. -->
+<div id="name-modal" class="modal-overlay hidden">
+  <div class="modal sheet" role="dialog" aria-modal="true" aria-labelledby="name-modal-title">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="name-modal-title">Change your name</h2>
+      <button class="icon-btn" id="name-modal-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <form id="name-form">
+      <label>Your name
+        <input type="text" id="name-input" maxlength="32" autocomplete="off" spellcheck="false" required />
+      </label>
+      <p class="field-hint">Every expense you have already added will show the new name. You will sign in with it from now on — your PIN does not change.</p>
+      <p class="form-error" id="name-error"></p>
+      <button type="submit" class="btn-primary">Save name</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============================= CONFIRM / ALERT MODAL ============================= -->
+<div id="confirm-modal" class="modal-overlay hidden">
+  <div class="modal alert-modal">
+    <svg class="icon-lg warning-icon"><use href="#icon-warning"/></svg>
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-body">This action cannot be undone.</p>
+    <div class="alert-actions" id="confirm-actions">
+      <button class="btn-ghost" id="confirm-cancel">Cancel</button>
+      <!-- Optional third choice, used where "cancel or do it" is a false pair
+           — e.g. a wrong-month warning, where carrying on is legitimate. -->
+      <button class="btn-secondary hidden" id="confirm-alt"></button>
+      <button class="btn-danger" id="confirm-ok">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= MONTH PICKER ============================= -->
+<div id="month-modal" class="modal-overlay hidden">
+  <div class="modal sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>Choose a month</h2>
+      <button class="icon-btn" id="month-modal-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <p class="panel-hint" id="month-modal-hint">Every month the room has been running, newest first. Nothing is ever deleted.</p>
+    <div class="month-picker" id="month-picker-list"></div>
+  </div>
+</div>
+
+<!-- ============================= DATE PICKER ============================= -->
+<div id="date-modal" class="modal-overlay hidden">
+  <div class="modal sheet date-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>Select date</h2>
+      <button class="icon-btn" id="date-modal-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <div class="date-nav">
+      <button type="button" class="icon-btn-sm" id="date-prev-month" aria-label="Previous month"><svg class="icon-sm date-chevron-prev"><use href="#icon-chevron"/></svg></button>
+      <div class="date-month-label" id="date-month-label"></div>
+      <button type="button" class="icon-btn-sm" id="date-next-month" aria-label="Next month"><svg class="icon-sm"><use href="#icon-chevron"/></svg></button>
+    </div>
+    <div class="date-weekdays"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+    <div class="date-grid" id="date-grid"></div>
+    <button type="button" class="btn-secondary" id="date-today-btn">Today</button>
+  </div>
+</div>
+
+<!-- ============================= MANAGE CATEGORIES (Host only) ============================= -->
+<div id="manage-categories-modal" class="modal-overlay hidden">
+  <div class="modal sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>Manage categories</h2>
+      <button class="icon-btn" id="manage-categories-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <div id="manage-categories-list"></div>
+  </div>
+</div>
+
+<!-- ============================= EDIT / ADD CATEGORY ============================= -->
+<div id="category-edit-modal" class="modal-overlay hidden">
+  <div class="modal sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="category-edit-title">Add category</h2>
+      <button class="icon-btn" id="category-edit-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <form id="category-edit-form">
+      <label>Category name
+        <input type="text" id="category-edit-name" placeholder="e.g. Pet Supplies" required />
+      </label>
+      <label>Group
+        <div class="segmented" role="tablist">
+          <button type="button" class="segmented-btn active" data-group="Day-to-day">Day-to-day</button>
+          <button type="button" class="segmented-btn" data-group="Bills &amp; Fixed Costs">Bills &amp; fixed</button>
+        </div>
+      </label>
+      <label>Icon
+        <div class="icon-picker-grid" id="category-edit-icon-grid"></div>
+      </label>
+      <label>Colour
+        <div class="color-picker-row" id="category-edit-color-row"></div>
+      </label>
+      <input type="hidden" id="category-edit-id" />
+      <input type="hidden" id="category-edit-group" value="Day-to-day" />
+      <input type="hidden" id="category-edit-icon" required />
+      <input type="hidden" id="category-edit-color" required />
+      <button type="submit" class="btn-primary">Save category</button>
+      <div class="danger-zone hidden" id="category-edit-danger-zone">
+        <button type="button" class="btn-quiet-danger" id="category-edit-delete"><svg class="icon-sm"><use href="#icon-trash"/></svg> Delete category</button>
+      </div>
+      <p class="form-error" id="category-edit-error"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ============================= AVATAR PICKER (Profile) ============================= -->
+<div id="avatar-modal" class="modal-overlay hidden">
+  <div class="modal sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>Choose your avatar</h2>
+      <button class="icon-btn" id="avatar-modal-close" aria-label="Close"><svg class="icon-sm"><use href="#icon-close"/></svg></button>
+    </div>
+    <div class="avatar-grid" id="profile-avatar-grid"></div>
+  </div>
+</div>
+
+<!-- ============================= GUIDED TOUR ============================= -->
+<div id="tour-overlay" class="tour-overlay hidden">
+  <div class="tour-spotlight" id="tour-spotlight"></div>
+  <div class="tour-tooltip" id="tour-tooltip">
+    <div class="tour-step-count" id="tour-step-count"></div>
+    <h3 class="tour-title" id="tour-title"></h3>
+    <p class="tour-body" id="tour-body"></p>
+    <div class="tour-actions">
+      <button type="button" class="tour-skip" id="tour-skip">Skip tour</button>
+      <div class="tour-nav-btns">
+        <button type="button" class="btn-ghost tour-back-btn hidden" id="tour-back">Back</button>
+        <button type="button" class="btn-primary tour-next-btn" id="tour-next">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= TOAST ============================= -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

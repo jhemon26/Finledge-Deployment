@@ -1,0 +1,9 @@
+# https://finledge.uk/robots.txt
+User-agent: *
+Allow: /
+
+# Nothing useful lives behind the API or the socket, and both are auth-gated.
+Disallow: /api/
+Disallow: /ws
+
+Sitemap: https://finledge.uk/sitemap.xml
